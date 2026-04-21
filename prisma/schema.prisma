@@ -1,0 +1,175 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                String      @id @default(cuid())
+  clerkId           String      @unique
+  email             String      @unique
+  firstName         String?
+  lastName          String?
+  role              UserRole    @default(CUSTOMER)
+  phone             String?
+  isAdmin           Boolean     @default(false)
+  profileImage      String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  addresses         Address[]
+  deliveries        Delivery[]  @relation("CustomerDeliveries")
+  driverDeliveries  Delivery[]  @relation("DriverDeliveries")
+  orders            Order[]
+  reviews           Review[]
+  
+  // Driver profile fields
+  licenseNumber     String?     @unique
+  licenseExpiry     DateTime?
+  vehicleType       String?
+  vehiclePlate      String?     @unique
+  isDriverVerified  Boolean     @default(false)
+  isDriverActive    Boolean     @default(false)
+  driverRating      Float       @default(0)
+  totalDeliveries   Int         @default(0)
+}
+
+model Address {
+  id                String      @id @default(cuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  street            String
+  city              String
+  state             String
+  zipCode           String
+  country           String
+  latitude          Float?
+  longitude         Float?
+  label             String?
+  isDefault         Boolean     @default(false)
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  pickupDeliveries  Delivery[]  @relation("PickupAddress")
+  dropoffDeliveries Delivery[]  @relation("DropoffAddress")
+  
+  @@index([userId])
+}
+
+model Delivery {
+  id                String      @id @default(cuid())
+  customerId        String
+  customer          User        @relation("CustomerDeliveries", fields: [customerId], references: [id], onDelete: Cascade)
+  
+  driverId          String?
+  driver            User?       @relation("DriverDeliveries", fields: [driverId], references: [id], onDelete: SetNull)
+  
+  pickupAddressId   String
+  pickupAddress     Address     @relation("PickupAddress", fields: [pickupAddressId], references: [id])
+  
+  dropoffAddressId  String
+  dropoffAddress    Address     @relation("DropoffAddress", fields: [dropoffAddressId], references: [id])
+  
+  orderId           String?     @unique
+  order             Order?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  
+  status            DeliveryStatus @default(PENDING)
+  priority          Priority    @default(NORMAL)
+  distance          Float?
+  estimatedTime     Int?
+  actualTime        Int?
+  
+  notes             String?
+  description       String?
+  weight            Float?
+  dimensions        String?
+  
+  pickupTime        DateTime?
+  deliveryTime      DateTime?
+  scheduledTime     DateTime?
+  
+  cost              Float
+  tip               Float       @default(0)
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  review            Review?
+  
+  @@index([customerId])
+  @@index([driverId])
+  @@index([status])
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  items             String      // JSON array of items
+  totalAmount       Float
+  status            OrderStatus @default(PENDING)
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  delivery          Delivery?
+  
+  @@index([userId])
+  @@index([status])
+}
+
+model Review {
+  id                String      @id @default(cuid())
+  deliveryId        String      @unique
+  delivery          Delivery    @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  rating            Int         // 1-5
+  comment           String?
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([userId])
+}
+
+enum UserRole {
+  ADMIN
+  DRIVER
+  CUSTOMER
+}
+
+enum DeliveryStatus {
+  PENDING
+  ASSIGNED
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+  FAILED
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
