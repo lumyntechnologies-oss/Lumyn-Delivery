@@ -12,7 +12,7 @@ async function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-white to-secondary/5 dark:from-primary-dark dark:via-primary-dark dark:to-primary-light">
+     <div className="min-h-screen bg-linear-to-b from-white via-white to-secondary/5 dark:from-primary-dark dark:via-primary-dark dark:to-primary-light">
       <Navbar />
 
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-32">
@@ -49,45 +49,45 @@ async function HomePage() {
                 <Zap className="h-6 w-6 text-accent-gold" />
               </div>
             </div>
-            <h3 class="text-xl font-bold text-primary mb-2">Lightning Fast</h3>
-            <p class="text-secondary">Get deliveries completed in hours, not days. Real-time tracking and updates.</p>
+             <h3 className="text-xl font-bold text-primary mb-2">Lightning Fast</h3>
+             <p className="text-secondary">Get deliveries completed in hours, not days. Real-time tracking and updates.</p>
           </div>
 
           <div className="card text-center">
             <div className="flex justify-center mb-4">
               <div className="h-12 w-12 rounded-2xl bg-accent-teal/20 flex items-center justify-center">
-                <Users class="h-6 w-6 text-accent-teal" />
+                 <Users className="h-6 w-6 text-accent-teal" />
               </div>
             </div>
-            <h3 class="text-xl font-bold text-primary mb-2">Professional Drivers</h3>
-            <p class="text-secondary">All drivers are verified, insured, and trained to handle your packages with care.</p>
+             <h3 className="text-xl font-bold text-primary mb-2">Professional Drivers</h3>
+             <p className="text-secondary">All drivers are verified, insured, and trained to handle your packages with care.</p>
           </div>
 
           <div className="card text-center">
             <div className="flex justify-center mb-4">
               <div className="h-12 w-12 rounded-2xl bg-accent-gold/20 flex items-center justify-center">
-                <Package class="h-6 w-6 text-accent-gold" />
+                 <Package className="h-6 w-6 text-accent-gold" />
               </div>
             </div>
-            <h3 class="text-xl font-bold text-primary mb-2">Safe & Secure</h3>
-            <p class="text-secondary">Full insurance coverage and GPS tracking for complete peace of mind.</p>
+             <h3 className="text-xl font-bold text-primary mb-2">Safe & Secure</h3>
+             <p className="text-secondary">Full insurance coverage and GPS tracking for complete peace of mind.</p>
           </div>
         </div>
       </section>
 
-      <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-        <div class="bg-primary rounded-2xl p-8 sm:p-12 text-center text-white">
-          <h2 class="text-3xl sm:text-4xl font-bold mb-4">Ready to deliver with Lumyn?</h2>
-          <p class="text-lg mb-8 opacity-90">Join thousands of customers and drivers already using Lumyn Delivery.</p>
-          <Link href="/sign-up" class="inline-block bg-accent-gold hover:bg-accent-gold-light text-primary px-8 py-3 rounded-2xl font-semibold transition-all">
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+        <div className="bg-primary rounded-2xl p-8 sm:p-12 text-center text-white">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to deliver with Lumyn?</h2>
+          <p className="text-lg mb-8 opacity-90">Join thousands of customers and drivers already using Lumyn Delivery.</p>
+          <Link href="/sign-up" className="inline-block bg-accent-gold hover:bg-accent-gold-light text-primary px-8 py-3 rounded-2xl font-semibold transition-all">
             Start Now
           </Link>
         </div>
       </section>
 
-      <footer class="border-t border-border mt-16 py-8 bg-white dark:bg-primary-light">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div class="text-center text-secondary text-sm">
+      <footer className="border-t border-border mt-16 py-8 bg-white dark:bg-primary-light">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center text-secondary text-sm">
             <p>&copy; 2024 Lumyn Delivery. All rights reserved.</p>
           </div>
         </div>

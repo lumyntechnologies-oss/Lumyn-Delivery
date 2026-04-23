@@ -27,11 +27,20 @@ export async function GET(request: NextRequest) {
         licenseNumber: true,
         licenseExpiry: true,
         vehicleType: true,
+        vehicleMake: true,
+        vehicleModel: true,
+        vehicleYear: true,
         vehiclePlate: true,
+        vehicleColor: true,
         isDriverVerified: true,
         isDriverActive: true,
         driverRating: true,
         totalDeliveries: true,
+        bio: true,
+        yearsOfExperience: true,
+        languages: true,
+        applicationStatus: true,
+        onboardingCompleted: true,
         latitude: true,
         longitude: true,
       },
@@ -83,6 +92,11 @@ export async function GET(request: NextRequest) {
         earnings: totalEarnings._sum.cost || 0,
         rating: user.driverRating || 0,
       },
+    }
+
+    // Parse languages if present
+    if (user.languages) {
+      profileData.languages = JSON.parse(user.languages)
     }
 
     return NextResponse.json(successResponse(profileData, 'Driver profile fetched'), { status: 200 })

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
-import { Package, TrendingUp, Star, DollarSign, Loader, AlertCircle, Power, PowerOff, Navigation, MapPin, Phone, Mail, CheckCircle } from 'lucide-react'
+import { Package, TrendingUp, Star, DollarSign, Loader, AlertCircle, Power, PowerOff, Navigation, MapPin, Phone, Mail, CheckCircle, Shield, Clock, FileText, Edit3 } from 'lucide-react'
 import Link from 'next/link'
 
 interface Delivery {
@@ -45,6 +45,29 @@ interface Delivery {
   }
 }
 
+interface DriverProfile {
+  id: string
+  clerkId: string
+  email: string
+  firstName?: string
+  lastName?: string
+  phone?: string
+  licenseNumber?: string
+  licenseExpiry?: string
+  vehicleType?: string
+  vehicleMake?: string
+  vehicleModel?: string
+  vehicleYear?: number
+  vehiclePlate?: string
+  isDriverVerified: boolean
+  isDriverActive: boolean
+  driverRating: number
+  totalDeliveries: number
+  applicationStatus: string
+  bio?: string
+  profileImage?: string
+}
+
 export default function DriverDashboardPage() {
   const { isSignedIn } = useAuth()
   const router = useRouter()
@@ -52,6 +75,7 @@ export default function DriverDashboardPage() {
   const [isDriver, setIsDriver] = useState(false)
   const [isOnline, setIsOnline] = useState(false)
   const [deliveries, setDeliveries] = useState<Delivery[]>([])
+  const [profile, setProfile] = useState<DriverProfile | null>(null)
   const [stats, setStats] = useState<{
     totalJobs: number
     active: number
@@ -70,35 +94,36 @@ export default function DriverDashboardPage() {
 
     fetchDriverData()
     fetchDeliveries()
-    
+
     const interval = setInterval(fetchDeliveries, 5000)
     return () => clearInterval(interval)
   }, [isSignedIn])
 
-   const fetchDriverData = async () => {
-     try {
-       const response = await fetch('/api/drivers/profile')
-       const data = await response.json()
-       if (data.success) {
-         setIsDriver(true)
-         setIsOnline(data.data.isDriverActive || false)
-         setStats(data.data.stats || {
-           totalJobs: data.data.totalDeliveries || 0,
-           active: 0,
-           today: 0,
-           earnings: 0,
-           rating: data.data.driverRating || 0,
-         })
-       } else {
-         setIsDriver(false)
-       }
-     } catch (error) {
-       console.error('Error fetching driver profile:', error)
-       setIsDriver(false)
-     } finally {
-       setLoading(false)
-     }
-   }
+  const fetchDriverData = async () => {
+    try {
+      const response = await fetch('/api/drivers/profile')
+      const data = await response.json()
+      if (data.success) {
+        setIsDriver(true)
+        setProfile(data.data)
+        setIsOnline(data.data.isDriverActive || false)
+        setStats(data.data.stats || {
+          totalJobs: data.data.totalDeliveries || 0,
+          active: 0,
+          today: 0,
+          earnings: 0,
+          rating: data.data.driverRating || 0,
+        })
+      } else {
+        setIsDriver(false)
+      }
+    } catch (error) {
+      console.error('Error fetching driver profile:', error)
+      setIsDriver(false)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const fetchDeliveries = async () => {
     try {
@@ -225,14 +250,83 @@ export default function DriverDashboardPage() {
           </button>
         </div>
 
+        {/* Verification Banner */}
+        {profile && !profile.isDriverVerified && (
+          <div className="card mb-6 bg-warning/5 border border-warning/20">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="h-10 w-10 rounded-full bg-warning/20 flex items-center justify-center mt-1">
+                  <Shield className="h-5 w-5 text-warning" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-warning mb-1">Verification Pending</h3>
+                  <p className="text-sm text-secondary">
+                    Your driver application is under review. This usually takes 1-2 business days.
+                    {profile.applicationStatus === 'REJECTED' && ' Your application was rejected. Please check your email for details.'}
+                  </p>
+                </div>
+              </div>
+              <Link href="/become-driver" className="btn-secondary text-sm whitespace-nowrap">
+                View Application
+              </Link>
+            </div>
+          </div>
+        )}
+
         {!isOnline && (
           <div className="card mb-6 bg-warning/5 border-warning/20">
             <p className="text-warning text-sm">You are currently offline. Go online to receive delivery assignments.</p>
           </div>
         )}
 
-         {/* Stats */}
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+         {/* Profile Overview */}
+         {profile && (
+          <div className="card mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+              <div className="flex items-center gap-4">
+                <div className="h-20 w-20 rounded-full bg-accent-gold/20 flex items-center justify-center">
+                  {profile.firstName?.[0]}{profile.lastName?.[0]}
+                  <span className="text-2xl font-bold text-accent-gold">
+                    {profile.firstName?.[0]}{profile.lastName?.[0]}
+                  </span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-primary">
+                    {profile.firstName} {profile.lastName}
+                  </h2>
+                  <p className="text-secondary">{profile.email}</p>
+                  <div className="flex items-center gap-4 mt-2 text-sm">
+                    <span className="flex items-center gap-1 text-secondary">
+                      <Phone className="h-3 w-3" />
+                      {profile.phone || 'No phone'}
+                    </span>
+                    <span className="flex items-center gap-1 text-secondary">
+                      <Car className="h-3 w-3" />
+                      {profile.vehicleMake} {profile.vehicleModel} ({profile.vehicleYear})
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1 flex flex-wrap items-center gap-4">
+                <div className={`px-4 py-2 rounded-xl flex items-center gap-2 ${
+                  profile.isDriverVerified ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
+                }`}>
+                  <Shield className="h-4 w-4" />
+                  <span className="font-medium">
+                    {profile.isDriverVerified ? 'Verified Driver' : 'Verification Pending'}
+                  </span>
+                </div>
+                <Link href="/become-driver" className="btn-secondary text-sm flex items-center gap-2">
+                  <Edit3 className="h-4 w-4" />
+                  Edit Profile
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
            {stats && [
              { label: 'Total Jobs', value: String(stats.totalJobs), icon: Package, color: 'accent-gold' },
              { label: 'Active', value: String(stats.active), icon: TrendingUp, color: 'info' },

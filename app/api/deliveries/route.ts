@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
           select: { id: true, firstName: true, lastName: true, email: true, phone: true },
         },
         driver: {
-          select: { id: true, user: { select: { firstName: true, lastName: true, email: true } } },
+          select: { id: true, firstName: true, lastName: true, email: true },
         },
         pickupAddress: true,
         dropoffAddress: true,

@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { successResponse, errorResponse, unauthorizedResponse, serverErrorResponse } from '@/lib/api-response'
 
-// GET /api/users — Get all users (admin only)
+// GET /api/admin/drivers — Get all drivers with documents (admin only)
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth()
@@ -26,28 +26,16 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
-    const search = searchParams.get('search') || ''
-    const role = searchParams.get('role') || ''
+    const status = searchParams.get('status') || ''
 
-    let whereClause: any = {}
+    let whereClause: any = { role: 'DRIVER' }
 
-    // Apply search filter
-    if (search) {
-      whereClause = {
-        OR: [
-          { email: { contains: search, mode: 'insensitive' } },
-          { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName: { contains: search, mode: 'insensitive' } },
-        ],
-      }
+    // Apply status filter
+    if (status) {
+      whereClause.applicationStatus = status
     }
 
-    // Apply role filter
-    if (role && ['CUSTOMER', 'DRIVER', 'ADMIN'].includes(role)) {
-      whereClause.role = role
-    }
-
-    const users = await prisma.user.findMany({
+    const drivers = await prisma.user.findMany({
       where: whereClause,
       select: {
         id: true,
@@ -56,14 +44,26 @@ export async function GET(request: NextRequest) {
         firstName: true,
         lastName: true,
         phone: true,
-        role: true,
-        isAdmin: true,
-        isDriverVerified: true,
-        isDriverActive: true,
+        profileImage: true,
         driverRating: true,
         totalDeliveries: true,
+        isDriverVerified: true,
+        isDriverActive: true,
+        licenseNumber: true,
+        licenseExpiry: true,
+        vehicleType: true,
+        vehicleMake: true,
+        vehicleModel: true,
+        vehicleYear: true,
+        vehiclePlate: true,
+        vehicleColor: true,
+        bio: true,
+        yearsOfExperience: true,
+        languages: true,
+        applicationStatus: true,
+        onboardingCompleted: true,
         createdAt: true,
-        updatedAt: true,
+        driverDocuments: true,
       },
       take: limit,
       skip: offset,
@@ -72,15 +72,19 @@ export async function GET(request: NextRequest) {
 
     const total = await prisma.user.count({ where: whereClause })
 
+    // Parse languages JSON
+    const parsedDrivers = drivers.map(driver => ({
+      ...driver,
+      languages: driver.languages ? JSON.parse(driver.languages) : [],
+    }))
+
     return NextResponse.json(
-      successResponse({ users, total, limit, offset }),
+      successResponse({ drivers: parsedDrivers, total, limit, offset }),
       { status: 200 }
     )
   } catch (error) {
-    console.error('Error fetching users:', error)
+    console.error('Error fetching drivers:', error)
     const [response, status] = serverErrorResponse()
     return NextResponse.json(response, { status })
   }
 }
-
-

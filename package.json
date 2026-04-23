@@ -1,10 +1,10 @@
 {
   "name": "lumyn-delivery",
   "private": true,
-"scripts": {
-  "dev": "next dev --webpack",
-  "build": "prisma generate && next build --webpack",
-  "start": "next start",
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "npx prisma generate && next build --webpack",
+    "start": "next start",
     "lint": "eslint ."
   },
   "dependencies": {
