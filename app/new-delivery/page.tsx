@@ -6,6 +6,10 @@ import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
 import { Plus, Loader, MapPin, Trash2 } from 'lucide-react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+
+// Dynamically import map components to avoid SSR issues
+const AddressPicker = dynamic(() => import('@/components/maps/address-picker'), { ssr: false })
 
 interface Address {
   id: string
@@ -32,23 +36,34 @@ export default function NewDeliveryPage() {
     pickupAddressId: '',
     dropoffAddressId: '',
     cost: '',
+    tip: '',
     priority: 'NORMAL',
     notes: '',
     weight: '',
     dimensions: '',
   })
 
-  const [addressForm, setAddressForm] = useState({
-    street: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: 'United States',
-    label: 'Home',
-    isDefault: false,
-  })
+   const [addressForm, setAddressForm] = useState({
+     street: '',
+     city: '',
+     state: '',
+     zipCode: '',
+     country: 'United States',
+     label: 'Home',
+     isDefault: false,
+     latitude: null as number | null,
+     longitude: null as number | null,
+   })
 
-  useEffect(() => {
+   // Address picker state: holds components from reverse geocoding
+   const [pickedAddress, setPickedAddress] = useState<{
+     lat: number
+     lng: number
+     displayName: string
+     components: any
+   } | null>(null)
+
+   useEffect(() => {
     if (!isSignedIn) {
       router.push('/sign-in')
       return
@@ -79,65 +94,97 @@ export default function NewDeliveryPage() {
     }))
   }
 
-  const handleAddressFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target
-    if (type === 'checkbox') {
-      setAddressForm((prev) => ({
-        ...prev,
-        [name]: (e.target as HTMLInputElement).checked,
-      }))
-    } else {
-      setAddressForm((prev) => ({
-        ...prev,
-        [name]: value,
-      }))
-    }
-  }
+   const handleAddressFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+     const { name, value, type } = e.target
+     if (type === 'checkbox') {
+       setAddressForm((prev) => ({
+         ...prev,
+         [name]: (e.target as HTMLInputElement).checked,
+       }))
+     } else {
+       setAddressForm((prev) => ({
+         ...prev,
+         [name]: value,
+       }))
+     }
+   }
 
-  const handleAddAddress = async () => {
-    if (!addressForm.street || !addressForm.city || !addressForm.state || !addressForm.zipCode) {
-      alert('Please fill in all required fields')
-      return
-    }
+   const handleMapLocationSelect = (lat: number, lng: number, displayName: string, components: any) => {
+     setPickedAddress({ lat, lng, displayName, components })
 
-    try {
-      setLoading(true)
-      const response = await fetch('/api/addresses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(addressForm),
-      })
-      const data = await response.json()
+     // Auto-fill form fields from reverse geocoded components
+     if (components) {
+       const street = components.road || components.house_number ? `${components.house_number || ''} ${components.road || ''}`.trim() : ''
+       setAddressForm((prev) => ({
+         ...prev,
+         street,
+         city: components.city || components.town || components.village || components.county || '',
+         state: components.state || '',
+         zipCode: components.postcode || '',
+         country: components.country || prev.country,
+         latitude: lat,
+         longitude: lng,
+       }))
+     } else {
+       setAddressForm((prev) => ({
+         ...prev,
+         latitude: lat,
+         longitude: lng,
+       }))
+     }
+   }
 
-      if (data.success) {
-        setAddresses((prev) => [...prev, data.data])
-        setAddressForm({
-          street: '',
-          city: '',
-          state: '',
-          zipCode: '',
-          country: 'United States',
-          label: 'Home',
-          isDefault: false,
-        })
-        setShowAddressForm(false)
-        // Auto-select the new address as pickup address if it's the first
-        if (formData.pickupAddressId === '') {
-          setFormData((prev) => ({
-            ...prev,
-            pickupAddressId: data.data.id,
-          }))
-        }
+   const handleAddAddress = async () => {
+     if (!addressForm.street || !addressForm.city || !addressForm.state || !addressForm.zipCode) {
+       alert('Please fill in all required fields')
+       return
+     }
+
+     try {
+       setLoading(true)
+       const response = await fetch('/api/addresses', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({
+           ...addressForm,
+           latitude: addressForm.latitude,
+           longitude: addressForm.longitude,
+         }),
+       })
+       const data = await response.json()
+
+       if (data.success) {
+         setAddresses((prev) => [...prev, data.data])
+         setAddressForm({
+           street: '',
+           city: '',
+           state: '',
+           zipCode: '',
+           country: 'United States',
+           label: 'Home',
+           isDefault: false,
+           latitude: null,
+           longitude: null,
+         })
+         setPickedAddress(null)
+         setShowAddressForm(false)
+         // Auto-select the new address as pickup address if it's the first
+         if (formData.pickupAddressId === '') {
+           setFormData((prev) => ({
+             ...prev,
+             pickupAddressId: data.data.id,
+           }))
+         }
+       }
+     } catch (error) {
+       console.error('Error creating address:', error)
+       alert('Failed to create address')
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error('Error creating address:', error)
-      alert('Failed to create address')
-    } finally {
-      setLoading(false)
     }
-  }
 
-  const handleDeleteAddress = async (addressId: string) => {
+   const handleDeleteAddress = async (addressId: string) => {
     if (!confirm('Are you sure you want to delete this address?')) return
 
     try {
@@ -193,8 +240,31 @@ export default function NewDeliveryPage() {
       const data = await response.json()
 
       if (data.success) {
+        const deliveryId = data.data.id
+        
+        // Initialize payment if there's a tip
+        const tipAmount = parseFloat(formData.tip || '0')
+        if (tipAmount > 0) {
+          try {
+            const paymentResponse = await fetch('/api/payments', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ deliveryId, tipAmount }),
+            })
+            const paymentData = await paymentResponse.json()
+            if (paymentData.success && paymentData.data.redirectUrl) {
+              // Redirect to Pesapal for payment
+              window.location.href = paymentData.data.redirectUrl
+              return // Don't navigate away from this page, let redirect happen
+            }
+          } catch (paymentErr) {
+            console.error('Payment error:', paymentErr)
+            // Continue without payment
+          }
+        }
+
         alert('Delivery created successfully!')
-        router.push(`/deliveries/${data.data.id}`)
+        router.push(`/deliveries/${deliveryId}`)
       } else {
         alert(data.error || 'Failed to create delivery')
       }
@@ -266,12 +336,29 @@ export default function NewDeliveryPage() {
                     required
                     className="input-base w-full"
                   />
-                </div>
+                 </div>
 
-                <div>
-                  <label htmlFor="priority" className="text-sm font-medium text-secondary block mb-2">
-                    Priority
-                  </label>
+                 <div>
+                   <label htmlFor="tip" className="text-sm font-medium text-secondary block mb-2">
+                     Optional Tip ($)
+                   </label>
+                   <input
+                     id="tip"
+                     name="tip"
+                     type="number"
+                     step="0.50"
+                     placeholder="0.00"
+                     value={formData.tip}
+                     onChange={handleFormChange}
+                     className="input-base w-full"
+                   />
+                   <p className="text-xs text-secondary mt-1">Thank your driver for great service</p>
+                 </div>
+
+                 <div>
+                   <label htmlFor="priority" className="text-sm font-medium text-secondary block mb-2">
+                     Priority
+                   </label>
                   <select
                     id="priority"
                     name="priority"
@@ -351,12 +438,22 @@ export default function NewDeliveryPage() {
               </button>
             </div>
 
-            {/* Add Address Form */}
-            {showAddressForm && (
-              <div className="mb-6 p-4 border border-border rounded-2xl bg-secondary/5">
-                <h3 className="font-medium text-primary mb-4">Add New Address</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+             {/* Add Address Form */}
+             {showAddressForm && (
+               <div className="mb-6 p-4 border border-border rounded-2xl bg-secondary/5">
+                 <h3 className="font-medium text-primary mb-4">Add New Address</h3>
+                 <div className="space-y-4">
+                   {/* Interactive Map for Address Selection */}
+                   <div className="mb-4">
+                     <AddressPicker
+                       onLocationSelect={handleMapLocationSelect}
+                       initialLat={pickedAddress?.lat}
+                       initialLng={pickedAddress?.lng}
+                       className="h-64"
+                     />
+                   </div>
+
+                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="street" className="text-sm font-medium text-secondary block mb-1">
                         Street

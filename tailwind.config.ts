@@ -2,7 +2,7 @@ import type { Config } from "tailwindcss"
 import defaultTheme from "tailwindcss/defaultTheme"
 
 const config = {
-  darkMode: ["class"],
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -14,14 +14,14 @@ const config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         primary: {
-          DEFAULT: "#121212", // Midnight Black
-          light: "#1E1E1E",
-          dark: "#0A0A0A",
+          DEFAULT: "#8B4513", // Chocolate Brown
+          light: "#A0522D",
+          dark: "#654321",
         },
         secondary: {
-          DEFAULT: "#707070", // Slate Gray
-          light: "#8C8C8C",
-          dark: "#555555",
+          DEFAULT: "#A96E2B", // Burnt Orange
+          light: "#C8955A",
+          dark: "#8B5E3C",
         },
         accent: {
           gold: "#D4AF37",
@@ -29,9 +29,9 @@ const config = {
           "gold-light": "#E5C158",
           "teal-light": "#00A3A3",
         },
-        success: "#10B981",
-        warning: "#F59E0B",
-        error: "#EF4444",
+        success: "#3E8A2E", // Sage Green
+        warning: "#C8955A", // Burnt Orange for warnings
+        error: "#8B4513", // Chocolate Brown for errors
         info: "#3B82F6",
       },
       fontFamily: {

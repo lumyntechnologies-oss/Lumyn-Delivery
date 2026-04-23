@@ -9,18 +9,18 @@ import Link from 'next/link'
 
 interface Driver {
   id: string
+  clerkId: string
+  email: string
+  firstName?: string
+  lastName?: string
+  phone?: string
   licenseNumber: string
   vehicleType: string
   vehiclePlate: string
-  isVerified: boolean
-  isActive: boolean
-  rating: number
+  isDriverVerified: boolean
+  isDriverActive: boolean
+  driverRating: number
   totalDeliveries: number
-  user: {
-    firstName?: string
-    lastName?: string
-    email: string
-  }
 }
 
 export default function AdminDriversPage() {
@@ -46,26 +46,63 @@ export default function AdminDriversPage() {
     fetchDrivers()
   }, [userId, router])
 
-  const fetchDrivers = async () => {
-    try {
-      // TODO: Implement actual API endpoint
-      setDrivers([])
-    } catch (error) {
-      console.error('Error fetching drivers:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+   const fetchDrivers = async () => {
+     try {
+       const response = await fetch('/api/drivers?limit=50')
+       const data = await response.json()
+       if (data.success && data.data) {
+         setDrivers(data.data.drivers || [])
+       } else {
+         setDrivers([])
+       }
+     } catch (error) {
+       console.error('Error fetching drivers:', error)
+       setDrivers([])
+     } finally {
+       setLoading(false)
+     }
+   }
 
-  const filteredDrivers = drivers.filter((driver) => {
+   const handleVerify = async (driverId: string, currentStatus: boolean) => {
+     try {
+       const response = await fetch(`/api/drivers/${driverId}`, {
+         method: 'PATCH',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ isDriverVerified: !currentStatus }),
+       })
+       const data = await response.json()
+       if (data.success) {
+         // Refresh drivers list
+         fetchDrivers()
+       } else {
+         alert(data.error || 'Failed to update driver status')
+       }
+     } catch (error) {
+       console.error('Error updating driver:', error)
+       alert('Error updating driver status')
+     }
+   }
+
+   const filteredDrivers = drivers.filter((driver) => {
     const matchesSearch =
-      driver.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${driver.user.firstName} ${driver.user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
+      driver.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      `${driver.firstName || ''} ${driver.lastName || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
 
-    if (filterStatus === 'verified') return matchesSearch && driver.isVerified
-    if (filterStatus === 'pending') return matchesSearch && !driver.isVerified
+    if (filterStatus === 'verified') return matchesSearch && driver.isDriverVerified
+    if (filterStatus === 'pending') return matchesSearch && !driver.isDriverVerified
     return matchesSearch
   })
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center h-96">
+          <Loader className="h-8 w-8 text-accent-gold animate-spin" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,25 +145,21 @@ export default function AdminDriversPage() {
         </div>
 
         {/* Drivers List */}
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader className="h-8 w-8 text-accent-gold animate-spin" />
-          </div>
-        ) : filteredDrivers.length === 0 ? (
+        {filteredDrivers.length === 0 ? (
           <div className="card text-center py-12">
-            <p className="text-secondary">No drivers found.</p>
+            <p className="text-secondary">No drivers found</p>
           </div>
         ) : (
-          <div className="grid gap-6">
+          <div className="grid gap-4">
             {filteredDrivers.map((driver) => (
               <div key={driver.id} className="card">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="font-semibold text-primary">
-                        {driver.user.firstName} {driver.user.lastName}
+                        {driver.firstName} {driver.lastName}
                       </h3>
-                      {driver.isVerified ? (
+                      {driver.isDriverVerified ? (
                         <span className="flex items-center gap-1 text-xs bg-success/10 text-success px-2 py-1 rounded-full">
                           <CheckCircle size={14} /> Verified
                         </span>
@@ -136,7 +169,7 @@ export default function AdminDriversPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-secondary mb-3">{driver.user.email}</p>
+                    <p className="text-sm text-secondary mb-3">{driver.email}</p>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                       <div>
                         <p className="text-secondary text-xs mb-1">License</p>
@@ -152,16 +185,21 @@ export default function AdminDriversPage() {
                       </div>
                       <div>
                         <p className="text-secondary text-xs mb-1">Rating</p>
-                        <p className="text-primary font-medium">⭐ {driver.rating.toFixed(1)}</p>
+                        <p className="text-primary font-medium">⭐ {driver.driverRating.toFixed(1)}</p>
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button className="btn-secondary text-sm">View Profile</button>
-                    {!driver.isVerified && (
-                      <button className="btn-primary text-sm">Verify</button>
-                    )}
-                  </div>
+                   <div className="flex gap-2">
+                     <button className="btn-secondary text-sm">View Profile</button>
+                     {!driver.isDriverVerified && (
+                       <button
+                         onClick={() => handleVerify(driver.id, driver.isDriverVerified)}
+                         className="btn-primary text-sm"
+                       >
+                         Verify
+                       </button>
+                     )}
+                   </div>
                 </div>
               </div>
             ))}

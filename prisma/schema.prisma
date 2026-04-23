@@ -10,35 +10,46 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id                String      @id @default(cuid())
-  clerkId           String      @unique
-  email             String      @unique
-  firstName         String?
-  lastName          String?
-  role              UserRole    @default(CUSTOMER)
-  phone             String?
-  isAdmin           Boolean     @default(false)
-  profileImage      String?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  
-  addresses         Address[]
-  deliveries        Delivery[]  @relation("CustomerDeliveries")
-  driverDeliveries  Delivery[]  @relation("DriverDeliveries")
-  orders            Order[]
-  reviews           Review[]
-  
-  // Driver profile fields
-  licenseNumber     String?     @unique
-  licenseExpiry     DateTime?
-  vehicleType       String?
-  vehiclePlate      String?     @unique
-  isDriverVerified  Boolean     @default(false)
-  isDriverActive    Boolean     @default(false)
-  driverRating      Float       @default(0)
-  totalDeliveries   Int         @default(0)
-}
+ model User {
+   id                String      @id @default(cuid())
+   clerkId           String      @unique
+   email             String      @unique
+   firstName         String?
+   lastName          String?
+   role              UserRole    @default(CUSTOMER)
+   phone             String?
+   isAdmin           Boolean     @default(false)
+   profileImage      String?
+   createdAt         DateTime    @default(now())
+   updatedAt         DateTime    @updatedAt
+   latitude          Float?
+   longitude         Float?
+   lastLocationUpdate DateTime?
+   
+   // Notification preferences
+   emailNotifications Boolean    @default(true)
+   smsNotifications   Boolean    @default(false)
+   pushNotifications  Boolean    @default(true)
+   
+   addresses         Address[]
+   deliveries        Delivery[]  @relation("CustomerDeliveries")
+   driverDeliveries  Delivery[]  @relation("DriverDeliveries")
+   orders            Order[]
+   reviews           Review[]
+   pushSubscriptions PushSubscription[]
+   payments          Payment[]
+   driverPayouts     DriverPayout[]
+   
+   // Driver profile fields
+   licenseNumber     String?     @unique
+   licenseExpiry     DateTime?
+   vehicleType       String?
+   vehiclePlate      String?     @unique
+   isDriverVerified  Boolean     @default(false)
+   isDriverActive    Boolean     @default(false)
+   driverRating      Float       @default(0)
+   totalDeliveries   Int         @default(0)
+ }
 
 model Address {
   id                String      @id @default(cuid())
@@ -64,50 +75,61 @@ model Address {
   @@index([userId])
 }
 
-model Delivery {
-  id                String      @id @default(cuid())
-  customerId        String
-  customer          User        @relation("CustomerDeliveries", fields: [customerId], references: [id], onDelete: Cascade)
-  
-  driverId          String?
-  driver            User?       @relation("DriverDeliveries", fields: [driverId], references: [id], onDelete: SetNull)
-  
-  pickupAddressId   String
-  pickupAddress     Address     @relation("PickupAddress", fields: [pickupAddressId], references: [id])
-  
-  dropoffAddressId  String
-  dropoffAddress    Address     @relation("DropoffAddress", fields: [dropoffAddressId], references: [id])
-  
-  orderId           String?     @unique
-  order             Order?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  
-  status            DeliveryStatus @default(PENDING)
-  priority          Priority    @default(NORMAL)
-  distance          Float?
-  estimatedTime     Int?
-  actualTime        Int?
-  
-  notes             String?
-  description       String?
-  weight            Float?
-  dimensions        String?
-  
-  pickupTime        DateTime?
-  deliveryTime      DateTime?
-  scheduledTime     DateTime?
-  
-  cost              Float
-  tip               Float       @default(0)
-  
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  
-  review            Review?
-  
-  @@index([customerId])
-  @@index([driverId])
-  @@index([status])
-}
+ model Delivery {
+   id                String      @id @default(cuid())
+   customerId        String
+   customer          User        @relation("CustomerDeliveries", fields: [customerId], references: [id], onDelete: Cascade)
+   
+   driverId          String?
+   driver            User?       @relation("DriverDeliveries", fields: [driverId], references: [id], onDelete: SetNull)
+   
+   pickupAddressId   String
+   pickupAddress     Address     @relation("PickupAddress", fields: [pickupAddressId], references: [id])
+   
+   dropoffAddressId  String
+   dropoffAddress    Address     @relation("DropoffAddress", fields: [dropoffAddressId], references: [id])
+   
+   orderId           String?     @unique
+   order             Order?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
+   
+   status            DeliveryStatus @default(PENDING)
+   priority          Priority    @default(NORMAL)
+   distance          Float?
+   estimatedTime     Int?
+   actualTime        Int?
+   
+    notes             String?
+    description       String?
+    weight            Float?
+    dimensions        String?
+    
+    pickupTime        DateTime?
+    deliveryTime      DateTime?
+    scheduledTime     DateTime?
+    assignedAt        DateTime?
+    
+    // Payment fields
+    paymentStatus     PaymentStatus @default(PENDING)
+    paymentIntentId   String?      @unique
+    paymentMethod     String?
+    paymentCurrency   String      @default("KES")
+    paymentAmount     Float?
+    
+    cost              Float
+    tip               Float       @default(0)
+    
+    createdAt         DateTime    @default(now())
+    updatedAt         DateTime    @updatedAt
+    
+    review            Review?
+    payment           Payment?
+    driverPayout      DriverPayout?
+    
+    @@index([customerId])
+    @@index([driverId])
+    @@index([status])
+    @@index([paymentStatus])
+ }
 
 model Order {
   id                String      @id @default(cuid())
@@ -127,22 +149,38 @@ model Order {
   @@index([status])
 }
 
-model Review {
-  id                String      @id @default(cuid())
-  deliveryId        String      @unique
-  delivery          Delivery    @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
-  
-  userId            String
-  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  rating            Int         // 1-5
-  comment           String?
-  
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  
-  @@index([userId])
-}
+ model Review {
+   id                String      @id @default(cuid())
+   deliveryId        String      @unique
+   delivery          Delivery    @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+   
+   userId            String
+   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+   
+   rating            Int         // 1-5
+   comment           String?
+   
+   createdAt         DateTime    @default(now())
+   updatedAt         DateTime    @updatedAt
+   
+   @@index([userId])
+ }
+
+ model PushSubscription {
+   id               String   @id @default(cuid())
+   userId           String
+   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+   
+   endpoint         String   @unique
+   keys             Json?    // { p256dh, auth }
+   deviceType       String?  // browser, mobile, etc.
+   isActive         Boolean  @default(true)
+   
+   createdAt        DateTime @default(now())
+   updatedAt        DateTime @updatedAt
+   
+   @@index([userId])
+ }
 
 enum UserRole {
   ADMIN
@@ -160,6 +198,22 @@ enum DeliveryStatus {
   FAILED
 }
 
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentType {
+  DELIVERY_PAYMENT    // Customer pays for delivery
+  DRIVER_PAYOUT       // Driver receives payment
+  TIP                 // Customer tip
+  REFUND              // Refund to customer
+}
+
 enum Priority {
   LOW
   NORMAL
@@ -172,4 +226,61 @@ enum OrderStatus {
   CONFIRMED
   CANCELLED
   COMPLETED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Payment {
+  id                String      @id @default(cuid())
+  deliveryId        String?     @unique
+  delivery          Delivery?   @relation(fields: [deliveryId], references: [id])
+  
+  userId            String
+  user              User        @relation(fields: [userId], references: [id])
+  
+  type              PaymentType
+  amount            Float
+  currency          String      @default("KES")
+  status            PaymentStatus @default(PENDING)
+  
+  provider          String?     // "pesapal", "stripe", etc.
+  providerPaymentId String?     @unique
+  
+  metadata          Json?       // Additional data
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([userId])
+  @@index([deliveryId])
+  @@index([status])
+}
+
+model DriverPayout {
+  id                String      @id @default(cuid())
+  driverId          String
+  driver            User        @relation(fields: [driverId], references: [id])
+  
+  deliveryId        String      @unique
+  delivery          Delivery    @relation(fields: [deliveryId], references: [id])
+  
+  amount            Float
+  currency          String      @default("KES")
+  status            PayoutStatus @default(PENDING)
+  
+  provider          String?     // "pesapal", "paypal", etc.
+  providerPayoutId  String?     @unique
+  
+  paidAt            DateTime?
+  
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  @@index([driverId])
+  @@index([status])
 }

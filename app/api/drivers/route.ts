@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { successResponse, errorResponse, unauthorizedResponse, serverErrorResponse } from '@/lib/api-response'
 
+// GET /api/drivers — Get all drivers (admin only)
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth()
@@ -16,26 +17,49 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0')
     const verified = searchParams.get('verified')
 
-    let whereClause: any = {}
-    if (verified === 'true') {
-      whereClause.isVerified = true
-    } else if (verified === 'false') {
-      whereClause.isVerified = false
+    // Check if user is admin
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      select: { id: true, role: true },
+    })
+
+    if (!user || user.role !== 'ADMIN') {
+      const [response, status] = errorResponse('Admin access required', 403)
+      return NextResponse.json(response, { status })
     }
 
-    const drivers = await prisma.driver.findMany({
+    let whereClause: any = { role: 'DRIVER' }
+    if (verified === 'true') {
+      whereClause.isDriverVerified = true
+    } else if (verified === 'false') {
+      whereClause.isDriverVerified = false
+    }
+
+    const drivers = await prisma.user.findMany({
       where: whereClause,
-      include: {
-        user: {
-          select: { id: true, firstName: true, lastName: true, email: true, phone: true },
-        },
+      select: {
+        id: true,
+        clerkId: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        profileImage: true,
+        driverRating: true,
+        totalDeliveries: true,
+        isDriverVerified: true,
+        isDriverActive: true,
+        vehicleType: true,
+        vehiclePlate: true,
+        licenseNumber: true,
+        createdAt: true,
       },
       take: limit,
       skip: offset,
-      orderBy: { rating: 'desc' },
+      orderBy: { driverRating: 'desc' },
     })
 
-    const total = await prisma.driver.count({ where: whereClause })
+    const total = await prisma.user.count({ where: whereClause })
 
     return NextResponse.json(
       successResponse({ drivers, total, limit, offset }),
@@ -48,6 +72,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// POST /api/drivers — Register as driver (create driver profile)
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth()
@@ -66,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { clerkId: userId },
-      select: { id: true },
+      select: { id: true, role: true },
     })
 
     if (!user) {
@@ -74,36 +99,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(response, { status })
     }
 
-    // Check if user is already a driver
-    const existingDriver = await prisma.driver.findUnique({
-      where: { userId: user.id },
-    })
-
-    if (existingDriver) {
+    if (user.role === 'DRIVER') {
       const [response, status] = errorResponse('User is already registered as a driver', 400)
       return NextResponse.json(response, { status })
     }
 
-    // Update user role to DRIVER
-    await prisma.user.update({
+    // Update user to driver role and add driver details
+    const driver = await prisma.user.update({
       where: { id: user.id },
-      data: { role: 'DRIVER' },
-    })
-
-    const driver = await prisma.driver.create({
       data: {
-        userId: user.id,
+        role: 'DRIVER',
         licenseNumber,
         licenseExpiry: new Date(licenseExpiry),
         vehicleType,
         vehiclePlate,
-        isVerified: false,
-        isActive: true,
+        isDriverActive: true,
       },
-      include: {
-        user: {
-          select: { id: true, firstName: true, lastName: true, email: true, phone: true },
-        },
+      select: {
+        id: true,
+        clerkId: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        profileImage: true,
+        role: true,
+        licenseNumber: true,
+        licenseExpiry: true,
+        vehicleType: true,
+        vehiclePlate: true,
+        isDriverVerified: true,
+        isDriverActive: true,
+        driverRating: true,
+        totalDeliveries: true,
       },
     })
 

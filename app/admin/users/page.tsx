@@ -24,47 +24,47 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
 
-  useEffect(() => {
-    if (!userId) {
-      router.push('/sign-in')
-      return
-    }
+   const fetchUsers = async () => {
+     try {
+       const response = await fetch(`/api/users?limit=50&search=${encodeURIComponent(searchTerm)}`)
+       const data = await response.json()
+       if (data.success && data.data) {
+         setUsers(data.data.users || [])
+       } else {
+         setUsers([])
+       }
+     } catch (error) {
+       console.error('Error fetching users:', error)
+       setUsers([])
+     } finally {
+       setLoading(false)
+     }
+   }
 
-    const adminUserIds = process.env.NEXT_PUBLIC_ADMIN_USER_IDS?.split(',') || []
-    if (!adminUserIds.includes(userId)) {
-      router.push('/deliveries')
-      return
-    }
+   useEffect(() => {
+     if (!userId) {
+       router.push('/sign-in')
+       return
+     }
 
-    fetchUsers()
-  }, [userId, router])
+     const adminUserIds = process.env.NEXT_PUBLIC_ADMIN_USER_IDS?.split(',') || []
+     if (!adminUserIds.includes(userId)) {
+       router.push('/deliveries')
+       return
+     }
 
-  const fetchUsers = async () => {
-    try {
-      // TODO: Implement actual API endpoint
-      setUsers([
-        {
-          id: '1',
-          email: 'customer@example.com',
-          firstName: 'John',
-          lastName: 'Doe',
-          role: 'CUSTOMER',
-          isAdmin: false,
-          createdAt: new Date().toISOString(),
-        },
-      ])
-    } catch (error) {
-      console.error('Error fetching users:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+     fetchUsers()
+   }, [userId, router])
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+   useEffect(() => {
+     // Refetch when search changes (with debounce)
+     const timeoutId = setTimeout(() => {
+       fetchUsers()
+     }, 300)
+     return () => clearTimeout(timeoutId)
+   }, [searchTerm])
+
+   const filteredUsers = users
 
   return (
     <div className="min-h-screen bg-background">

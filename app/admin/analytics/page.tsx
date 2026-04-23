@@ -5,7 +5,19 @@ import { useAuth } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
 import Link from 'next/link'
-import { TrendingUp, Calendar, Loader } from 'lucide-react'
+import { TrendingUp, Calendar, Loader, BarChart3, Users } from 'lucide-react'
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts'
 
 interface Analytics {
   summary: {
@@ -17,16 +29,20 @@ interface Analytics {
     verifiedDrivers: number
     totalRevenue: number
     revenueInPeriod: number
+    revenueToday: number
     averageRating: number
+    pendingDeliveries: number
   }
   deliveryStatus: Array<{ status: string; _count: number }>
   topDrivers: Array<{
     id: string
+    firstName?: string
+    lastName?: string
     totalDeliveries: number
-    rating: number
-    user: { firstName?: string; lastName?: string }
+    driverRating: number
   }>
   revenueTrend: Array<{ date: string; revenue: number }>
+  userGrowth: Array<{ date: string; newUsers: number }>
 }
 
 export default function AnalyticsPage() {
@@ -131,30 +147,49 @@ export default function AnalyticsPage() {
             ) : null}
           </div>
 
-          {/* Revenue Chart Placeholder */}
+          {/* Revenue Chart */}
           <div className="card">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-primary">Revenue Trends</h2>
-              <TrendingUp className="h-5 w-5 text-accent-gold" />
+              <BarChart3 className="h-5 w-5 text-accent-gold" />
             </div>
             {loading ? (
               <div className="h-64 bg-secondary/5 rounded-2xl flex items-center justify-center">
                 <Loader className="h-6 w-6 text-accent-gold animate-spin" />
               </div>
             ) : analytics ? (
-              <div className="space-y-4">
-                {analytics.revenueTrend.map((item) => (
-                  <div key={item.date} className="flex items-center justify-between p-3 bg-secondary/5 rounded-lg">
-                    <span className="text-sm text-secondary font-medium">{item.date}</span>
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 bg-accent-gold/30 rounded" style={{ width: `${(item.revenue / 1000) * 100}px` }} />
-                      <span className="text-sm font-semibold text-accent-gold w-20 text-right">${item.revenue.toFixed(0)}</span>
-                    </div>
-                  </div>
-                ))}
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics.revenueTrend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.2)" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: 'var(--secondary)', fontSize: 12 }}
+                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    />
+                    <YAxis
+                      tick={{ fill: 'var(--secondary)', fontSize: 12 }}
+                      tickFormatter={(value) => `$${value}`}
+                    />
+                    <Tooltip
+                      formatter={(value: number) => [`$${value.toFixed(0)}`, 'Revenue']}
+                      labelFormatter={(label) => new Date(label).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      contentStyle={{
+                        backgroundColor: 'var(--card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px',
+                        color: 'var(--primary)',
+                      }}
+                    />
+                    <Legend />
+                    <Bar dataKey="revenue" fill="var(--accent-gold)" name="Revenue" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             ) : (
-              <p className="text-secondary text-center py-8">No data available</p>
+              <div className="h-64 bg-secondary/5 rounded-2xl flex items-center justify-center">
+                <p className="text-secondary">No revenue data available</p>
+              </div>
             )}
           </div>
 
@@ -197,14 +232,14 @@ export default function AnalyticsPage() {
                       <div className="flex items-center gap-3">
                         <span className="text-lg font-bold text-accent-gold">#{index + 1}</span>
                         <div>
-                          <p className="font-semibold text-primary">{driver.user.firstName} {driver.user.lastName}</p>
-                          <p className="text-xs text-secondary">{driver.totalDeliveries} deliveries</p>
+                          <p className="font-semibold text-primary">{driver.firstName} {driver.lastName}</p>
+                           <p className="text-xs text-secondary">{driver.totalDeliveries} deliveries</p>
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-primary">{driver.rating.toFixed(1)} ⭐</p>
-                    </div>
+                     <div className="text-right">
+                       <p className="font-bold text-primary">{driver.driverRating.toFixed(1)} ⭐</p>
+                     </div>
                   </div>
                 ))}
               </div>
@@ -213,12 +248,58 @@ export default function AnalyticsPage() {
             )}
           </div>
 
-          {/* User Growth */}
+          {/* User Growth Chart */}
           <div className="card">
-            <h2 className="text-lg font-semibold text-primary mb-4">User Growth</h2>
-            <div className="h-48 bg-secondary/5 rounded-2xl flex items-center justify-center">
-              <p className="text-secondary">Chart placeholder - connect to charting library</p>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-primary">User Growth</h2>
+              <Users className="h-5 w-5 text-accent-gold" />
             </div>
+            {loading ? (
+              <div className="h-48 bg-secondary/5 rounded-2xl flex items-center justify-center">
+                <Loader className="h-6 w-6 text-accent-gold animate-spin" />
+              </div>
+            ) : analytics?.userGrowth ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={analytics.userGrowth}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.2)" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: 'var(--secondary)', fontSize: 12 }}
+                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    />
+                    <YAxis
+                      tick={{ fill: 'var(--secondary)', fontSize: 12 }}
+                      allowDecimals={false}
+                    />
+                    <Tooltip
+                      formatter={(value: number) => [value, 'New Users']}
+                      labelFormatter={(label) => new Date(label).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      contentStyle={{
+                        backgroundColor: 'var(--card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px',
+                        color: 'var(--primary)',
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="newUsers"
+                      stroke="var(--accent-teal)"
+                      strokeWidth={2}
+                      dot={{ fill: 'var(--accent-teal)', r: 4 }}
+                      activeDot={{ r: 6 }}
+                      name="New Users"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-48 bg-secondary/5 rounded-2xl flex items-center justify-center">
+                <p className="text-secondary">No user growth data available</p>
+              </div>
+            )}
           </div>
         </div>
 

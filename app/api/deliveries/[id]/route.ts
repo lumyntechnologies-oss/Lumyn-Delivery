@@ -26,25 +26,28 @@ export async function GET(
       return NextResponse.json(response, { status })
     }
 
-    const delivery = await prisma.delivery.findUnique({
-      where: { id },
-      include: {
-        customer: {
-          select: { id: true, firstName: true, lastName: true, email: true, phone: true },
-        },
-        driver: {
-          select: {
-            id: true,
-            rating: true,
-            licenseNumber: true,
-            user: { select: { firstName: true, lastName: true, email: true, phone: true } },
-          },
-        },
-        pickupAddress: true,
-        dropoffAddress: true,
-        review: true,
-      },
-    })
+     const delivery = await prisma.delivery.findUnique({
+       where: { id },
+       include: {
+         customer: {
+           select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+         },
+         driver: {
+           select: {
+             id: true,
+             driverRating: true,
+             licenseNumber: true,
+             firstName: true,
+             lastName: true,
+             email: true,
+             phone: true,
+           },
+         },
+         pickupAddress: true,
+         dropoffAddress: true,
+         review: true,
+       },
+     })
 
     if (!delivery) {
       const [response, status] = notFoundResponse('Delivery')
@@ -121,22 +124,25 @@ export async function PUT(
         tip: tip !== undefined ? parseFloat(tip) : undefined,
         notes: notes || undefined,
       },
-      include: {
-        customer: {
-          select: { id: true, firstName: true, lastName: true, email: true, phone: true },
-        },
-        driver: {
-          select: {
-            id: true,
-            rating: true,
-            licenseNumber: true,
-            user: { select: { firstName: true, lastName: true, email: true, phone: true } },
-          },
-        },
-        pickupAddress: true,
-        dropoffAddress: true,
-        review: true,
-      },
+       include: {
+         customer: {
+           select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+         },
+         driver: {
+           select: {
+             id: true,
+             driverRating: true,
+             licenseNumber: true,
+             firstName: true,
+             lastName: true,
+             email: true,
+             phone: true,
+           },
+         },
+         pickupAddress: true,
+         dropoffAddress: true,
+         review: true,
+       },
     })
 
     return NextResponse.json(successResponse(updatedDelivery, 'Delivery updated successfully'), { status: 200 })

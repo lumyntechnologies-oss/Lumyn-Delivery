@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   keywords: ['delivery', 'logistics', 'shipping', 'lumyn'],
   authors: [{ name: 'Lumyn Delivery' }],
   icons: {
-    icon: '/icon-192x192.png',
+    icon: '/favicon.jpg',
     apple: '/icon-192x192.png',
   },
   appleWebApp: {
@@ -41,6 +41,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" className="bg-background" suppressHydrationWarning>
         <head>
+          <link rel="icon" href="/favicon.jpg" />
           <link rel="manifest" href="/manifest.json" />
           <link rel="apple-touch-icon" href="/icon-192x192.png" />
           <meta name="apple-mobile-web-app-capable" content="yes" />

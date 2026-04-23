@@ -13,7 +13,12 @@ interface Delivery {
   cost: number
   createdAt: string
   customer?: { firstName?: string; lastName?: string }
-  driver?: { user?: { firstName?: string; lastName?: string } }
+  driver?: { 
+    id: string
+    firstName?: string 
+    lastName?: string 
+    driverRating?: number 
+  }
 }
 
 export default function DeliveriesPage() {
@@ -139,11 +144,11 @@ export default function DeliveriesPage() {
                       </span>
                     </div>
                     <p className="text-sm text-secondary mb-2">{formatDate(delivery.createdAt)}</p>
-                    {delivery.driver && (
-                      <p className="text-sm text-secondary">
-                        Driver: {delivery.driver.user?.firstName || 'Pending Assignment'}
-                      </p>
-                    )}
+                     {delivery.driver && (
+                       <p className="text-sm text-secondary">
+                         Driver: {delivery.driver.firstName || 'Pending Assignment'}
+                       </p>
+                     )}
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-bold text-accent-gold">${delivery.cost.toFixed(2)}</p>

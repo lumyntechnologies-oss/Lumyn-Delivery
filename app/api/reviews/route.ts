@@ -144,13 +144,13 @@ export async function POST(request: NextRequest) {
         select: { rating: true },
       })
 
-      const averageRating =
-        allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
+       const averageRating =
+         allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
 
-      await prisma.driver.update({
-        where: { id: delivery.driverId },
-        data: { rating: averageRating },
-      })
+       await prisma.user.update({
+         where: { id: delivery.driverId },
+         data: { driverRating: averageRating },
+       })
     }
 
     return NextResponse.json(successResponse(review, 'Review created successfully'), { status: 201 })

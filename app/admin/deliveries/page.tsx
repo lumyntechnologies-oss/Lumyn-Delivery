@@ -37,31 +37,50 @@ export default function AdminDeliveriesPage() {
 
   const statuses = ['all', 'PENDING', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED']
 
-  useEffect(() => {
-    if (!userId) {
-      router.push('/sign-in')
-      return
-    }
+   const fetchDeliveries = async (search?: string) => {
+     try {
+       const params = new URLSearchParams()
+       if (statusFilter !== 'all') params.append('status', statusFilter)
+       if (search) params.append('search', search)
+       params.append('limit', '50')
+       params.append('offset', '0')
 
-    const adminUserIds = process.env.NEXT_PUBLIC_ADMIN_USER_IDS?.split(',') || []
-    if (!adminUserIds.includes(userId)) {
-      router.push('/deliveries')
-      return
-    }
+       const response = await fetch(`/api/deliveries?${params.toString()}`)
+       const data = await response.json()
+       if (data.success && data.data) {
+         setDeliveries(data.data.deliveries || [])
+       } else {
+         setDeliveries([])
+       }
+     } catch (error) {
+       console.error('Error fetching deliveries:', error)
+       setDeliveries([])
+     } finally {
+       setLoading(false)
+     }
+   }
 
-    fetchDeliveries()
-  }, [userId, router])
+   useEffect(() => {
+     if (!userId) {
+       router.push('/sign-in')
+       return
+     }
 
-  const fetchDeliveries = async () => {
-    try {
-      // TODO: Implement actual API endpoint
-      setDeliveries([])
-    } catch (error) {
-      console.error('Error fetching deliveries:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+     const adminUserIds = process.env.NEXT_PUBLIC_ADMIN_USER_IDS?.split(',') || []
+     if (!adminUserIds.includes(userId)) {
+       router.push('/deliveries')
+       return
+     }
+
+     fetchDeliveries(searchTerm)
+   }, [userId, router, statusFilter])
+
+   useEffect(() => {
+     const timeoutId = setTimeout(() => {
+       fetchDeliveries(searchTerm)
+     }, 300)
+     return () => clearTimeout(timeoutId)
+   }, [searchTerm])
 
   const getPriorityBadgeClass = (priority: string) => {
     switch (priority) {
@@ -99,14 +118,7 @@ export default function AdminDeliveriesPage() {
     }
   }
 
-  const filteredDeliveries = deliveries.filter((delivery) => {
-    const matchesSearch =
-      delivery.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      delivery.customer?.email.toLowerCase().includes(searchTerm.toLowerCase())
-
-    if (statusFilter === 'all') return matchesSearch
-    return matchesSearch && delivery.status === statusFilter
-  })
+   const filteredDeliveries = deliveries
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

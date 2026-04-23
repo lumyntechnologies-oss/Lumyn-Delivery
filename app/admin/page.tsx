@@ -41,23 +41,28 @@ export default function AdminDashboard() {
     fetchStats()
   }, [isSignedIn, userId, router])
 
-  const fetchStats = async () => {
-    try {
-      // TODO: Create endpoint for admin stats
-      setStats({
-        totalDeliveries: 1234,
-        totalUsers: 567,
-        totalDrivers: 89,
-        pendingDeliveries: 45,
-        revenueToday: 3420.50,
-        averageRating: 4.8,
-      })
-    } catch (error) {
-      console.error('Error fetching stats:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+   const fetchStats = async () => {
+     try {
+       const response = await fetch('/api/admin/analytics?period=month')
+       const data = await response.json()
+       if (data.success && data.data) {
+         setStats({
+           totalDeliveries: data.data.summary.totalDeliveries,
+           totalUsers: data.data.summary.totalUsers,
+           totalDrivers: data.data.summary.totalDrivers,
+           pendingDeliveries: data.data.summary.pendingDeliveries,
+           revenueToday: data.data.summary.revenueToday,
+           averageRating: data.data.summary.averageRating,
+         })
+       } else {
+         console.error('Failed to fetch stats:', data.error)
+       }
+     } catch (error) {
+       console.error('Error fetching stats:', error)
+     } finally {
+       setLoading(false)
+     }
+   }
 
   if (!isAdmin) {
     return (

@@ -9,10 +9,18 @@ import Link from 'next/link'
 
 interface DriverProfile {
   id: string
+  clerkId: string
+  email: string
+  firstName?: string
+  lastName?: string
+  phone?: string
   licenseNumber: string
   vehicleType: string
   vehiclePlate: string
-  isVerified: boolean
+  isDriverVerified: boolean
+  isDriverActive: boolean
+  driverRating: number
+  totalDeliveries: number
 }
 
 export default function BecomeDriverPage() {
@@ -134,10 +142,10 @@ export default function BecomeDriverPage() {
               </div>
             </div>
             <h1 className="text-2xl font-bold text-primary mb-2">You&apos;re Already a Driver!</h1>
-            <p className="text-secondary mb-6">
-              Your driver profile is registered and{' '}
-              {existingDriver.isVerified ? 'verified' : 'pending verification'}
-            </p>
+             <p className="text-secondary mb-6">
+               Your driver profile is registered and{' '}
+               {existingDriver.isDriverVerified ? 'verified' : 'pending verification'}
+             </p>
             <div className="bg-secondary/5 rounded-2xl p-4 mb-6 text-left">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
@@ -152,12 +160,12 @@ export default function BecomeDriverPage() {
                   <p className="text-secondary font-medium mb-1">Plate</p>
                   <p className="text-primary font-semibold">{existingDriver.vehiclePlate}</p>
                 </div>
-                <div>
-                  <p className="text-secondary font-medium mb-1">Status</p>
-                  <span className={`badge ${existingDriver.isVerified ? 'badge-success' : 'badge-warning'}`}>
-                    {existingDriver.isVerified ? 'Verified' : 'Pending'}
-                  </span>
-                </div>
+                 <div>
+                   <p className="text-secondary font-medium mb-1">Status</p>
+                   <span className={`badge ${existingDriver.isDriverVerified ? 'badge-success' : 'badge-warning'}`}>
+                     {existingDriver.isDriverVerified ? 'Verified' : 'Pending'}
+                   </span>
+                 </div>
               </div>
             </div>
             <Link href="/driver-dashboard" className="btn-primary inline-block">

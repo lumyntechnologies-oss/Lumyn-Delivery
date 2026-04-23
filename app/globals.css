@@ -5,22 +5,22 @@
 
 :root {
   /* Lumyn Delivery Color System */
-  --background: #FFFFFF;
-  --foreground: #121212;
-  --primary: #121212;
-  --primary-light: #1E1E1E;
-  --primary-dark: #0A0A0A;
-  --secondary: #707070;
-  --secondary-light: #8C8C8C;
-  --secondary-dark: #555555;
+  --background: #F5F5F0; /* Soft Sand */
+  --foreground: #8B4513; /* Chocolate Brown */
+  --primary: #8B4513; /* Chocolate Brown */
+  --primary-light: #A0522D;
+  --primary-dark: #654321;
+  --secondary: #C8955A; /* Burnt Orange */
+  --secondary-light: #E8C89A;
+  --secondary-dark: #8B5E3C;
   --accent-gold: #D4AF37;
   --accent-gold-light: #E5C158;
   --accent-teal: #008080;
   --accent-teal-light: #00A3A3;
   
-  --success: #10B981;
-  --warning: #F59E0B;
-  --error: #EF4444;
+  --success: #3E8A2E; /* Sage Green */
+  --warning: #C8955A; /* Burnt Orange */
+  --error: #8B4513; /* Chocolate Brown */
   --info: #3B82F6;
   
   --border: #E5E5E5;
@@ -29,26 +29,26 @@
 }
 
 .dark {
-  --background: #0A0A0A;
-  --foreground: #FFFFFF;
-  --primary: #121212;
-  --primary-light: #1E1E1E;
-  --primary-dark: #0A0A0A;
-  --secondary: #8C8C8C;
-  --secondary-light: #A0A0A0;
-  --secondary-dark: #5A5A5A;
+  --background: #2A1A0A; /* Darker soft sand */
+  --foreground: #F5F5F0; /* Soft Sand light */
+  --primary: #C8955A; /* Burnt Orange */
+  --primary-light: #E8C89A;
+  --primary-dark: #8B5E3C;
+  --secondary: #D4AF37; /* Accent Gold */
+  --secondary-light: #F0D890;
+  --secondary-dark: #A97E2B;
   --accent-gold: #D4AF37;
-  --accent-gold-light: #E5C158;
-  --accent-teal: #00A3A3;
-  --accent-teal-light: #00C5C5;
+  --accent-gold-light: #F0D890;
+  --accent-teal: #2D8B8B;
+  --accent-teal-light: #4DB8B8;
   
-  --success: #34D399;
-  --warning: #FBBF24;
-  --error: #F87171;
+  --success: #5BA84E; /* Sage Green light */
+  --warning: #D4AF37; /* Accent Gold */
+  --error: #C8955A; /* Burnt Orange */
   --info: #60A5FA;
   
-  --border: #2D2D2D;
-  --input: #1E1E1E;
+  --border: #4A4A4A;
+  --input: #3E3E3E;
 }
 
 @theme inline {
@@ -56,9 +56,15 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
   --color-secondary: var(--secondary);
+  --color-secondary-light: var(--secondary-light);
+  --color-secondary-dark: var(--secondary-dark);
   --color-accent-gold: var(--accent-gold);
+  --color-accent-gold-light: var(--accent-gold-light);
   --color-accent-teal: var(--accent-teal);
+  --color-accent-teal-light: var(--accent-teal-light);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-error: var(--error);
@@ -103,25 +109,25 @@
   .input-base {
     @apply rounded-2xl border border-border bg-input px-4 py-2.5 font-medium outline-none transition-all placeholder:text-secondary/50 focus:border-accent-gold focus:ring-2 focus:ring-accent-gold/20;
   }
-
+  
   .badge {
     @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold;
   }
-
+  
   .badge-success {
-    @apply badge bg-success/10 text-success;
+    @apply bg-success/10 text-success;
   }
-
+  
   .badge-warning {
-    @apply badge bg-warning/10 text-warning;
+    @apply bg-warning/10 text-warning;
   }
-
+  
   .badge-error {
-    @apply badge bg-error/10 text-error;
+    @apply bg-error/10 text-error;
   }
-
+  
   .badge-info {
-    @apply badge bg-info/10 text-info;
+    @apply bg-info/10 text-info;
   }
 
   .section-title {
