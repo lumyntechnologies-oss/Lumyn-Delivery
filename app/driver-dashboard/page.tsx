@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
-import { Package, TrendingUp, Star, DollarSign, Loader, AlertCircle, Power, PowerOff, Navigation, MapPin, Phone, Mail, CheckCircle, Shield, Clock, FileText, Edit3 } from 'lucide-react'
+import { Package, TrendingUp, Star, DollarSign, Loader, AlertCircle, Power, PowerOff, Navigation, MapPin, Phone, Mail, CheckCircle, Shield, Clock, FileText, Edit3, Car, Wallet } from 'lucide-react'
 import Link from 'next/link'
+import { useSSE } from '@/hooks/useSSE'
 
 interface Delivery {
   id: string
@@ -94,10 +95,22 @@ export default function DriverDashboardPage() {
 
     fetchDriverData()
     fetchDeliveries()
-
-    const interval = setInterval(fetchDeliveries, 5000)
-    return () => clearInterval(interval)
   }, [isSignedIn])
+
+  // Real-time updates via SSE
+  const { connected } = useSSE(profile?.id || null, {
+    onMessage: (message) => {
+      console.log('SSE message:', message)
+      // Refresh deliveries when update received
+      if (message.type === 'statusChange' || message.type === 'update') {
+        fetchDeliveries()
+      }
+    },
+    onStatusChange: (status, deliveryId) => {
+      console.log(`Delivery ${deliveryId} status changed to ${status}`)
+      fetchDeliveries()
+    },
+  })
 
   const fetchDriverData = async () => {
     try {
@@ -307,20 +320,36 @@ export default function DriverDashboardPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex-1 flex flex-wrap items-center gap-4">
-                <div className={`px-4 py-2 rounded-xl flex items-center gap-2 ${
-                  profile.isDriverVerified ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
-                }`}>
-                  <Shield className="h-4 w-4" />
-                  <span className="font-medium">
-                    {profile.isDriverVerified ? 'Verified Driver' : 'Verification Pending'}
-                  </span>
-                </div>
-                <Link href="/become-driver" className="btn-secondary text-sm flex items-center gap-2">
-                  <Edit3 className="h-4 w-4" />
-                  Edit Profile
-                </Link>
-              </div>
+               <div className="flex-1 flex flex-wrap items-center gap-4">
+                 <div className={`px-4 py-2 rounded-xl flex items-center gap-2 ${
+                   profile.isDriverVerified ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
+                 }`}>
+                   <Shield className="h-4 w-4" />
+                   <span className="font-medium">
+                     {profile.isDriverVerified ? 'Verified Driver' : 'Verification Pending'}
+                   </span>
+                 </div>
+                 <Link href="/driver/earnings" className="btn-secondary text-sm flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    Earnings
+                  </Link>
+                  <Link href="/driver/payouts" className="btn-secondary text-sm flex items-center gap-2">
+                    <Wallet className="h-4 w-4" />
+                    Payouts
+                  </Link>
+                  <Link href="/become-driver" className="btn-secondary text-sm flex items-center gap-2">
+                    <Edit3 className="h-4 w-4" />
+                    Edit Profile
+                  </Link>
+                  <Link href="/driver/payouts" className="btn-secondary text-sm flex items-center gap-2">
+                    <Wallet className="h-4 w-4" />
+                    Payouts
+                  </Link>
+                  <Link href="/become-driver" className="btn-secondary text-sm flex items-center gap-2">
+                    <Edit3 className="h-4 w-4" />
+                    Edit Profile
+                  </Link>
+               </div>
             </div>
           </div>
         )}

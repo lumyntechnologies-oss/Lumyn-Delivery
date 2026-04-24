@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { validateDelivery } from '@/lib/validation'
 import { successResponse, errorResponse, unauthorizedResponse, serverErrorResponse } from '@/lib/api-response'
+import { rateLimitMiddleware, getRateLimitHeaders } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
   try {
@@ -75,6 +77,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = await rateLimitMiddleware(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
+
   try {
     const { userId } = await auth()
     if (!userId) {
@@ -83,12 +91,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { pickupAddressId, dropoffAddressId, description, cost, priority = 'NORMAL', notes, weight, dimensions } = body
-
-    if (!pickupAddressId || !dropoffAddressId || !description || cost === undefined) {
-      const [response, status] = errorResponse('Missing required fields', 400)
+    
+    // Validate input
+    const validation = validateDelivery(body)
+    if (!validation.success) {
+      const [response, status] = errorResponse(
+        `Validation error: ${validation.error.errors[0]?.message || 'Invalid input'}`, 
+        400
+      )
       return NextResponse.json(response, { status })
     }
+
+    const { pickupAddressId, dropoffAddressId, description, cost, priority = 'NORMAL', notes, weight, dimensions } = validation.data
 
     // Get current user
     const user = await prisma.user.findUnique({

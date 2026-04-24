@@ -1,198 +1,230 @@
-# Lumyn Delivery - Setup Guide
+# Lumyn Delivery - Quick Setup Guide
 
-Welcome to the Lumyn Delivery application! This document will guide you through setting up the project locally and deploying it.
+**Get your delivery platform running in 15 minutes!**
 
-## Prerequisites
+---
 
-- Node.js 18+ and pnpm
-- A Neon PostgreSQL database (free tier available)
-- Clerk authentication account (free tier available)
+## ⚡ 5-Minute Setup (Production)
 
-## Environment Variables
-
-You need to set up the following environment variables. Add them to your `.env.local` file:
-
-### Database
-- `DATABASE_URL` - Your Neon PostgreSQL connection string
-  - Format: `postgresql://user:password@host/database`
-
-### Clerk Authentication
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Your Clerk publishable key (public, safe to expose)
-- `CLERK_SECRET_KEY` - Your Clerk secret key (keep this private!)
-- `CLERK_WEBHOOK_SECRET` - Webhook signing secret from Clerk dashboard
-
-### Admin Configuration
-- `ADMIN_USER_IDS` - Comma-separated list of Clerk user IDs with admin access
-  - Example: `user_1234567890,user_0987654321`
-
-## Setup Steps
-
-### 1. Install Dependencies
+### **1. Deploy to Vercel (Recommended)**
 ```bash
+# Click this button to deploy:
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone)
+
+# Or manually:
+1. Push code to GitHub
+2. Go to vercel.com → Import Project
+3. Add environment variables (see below)
+4. Click Deploy
+```
+
+### **2. Required Environment Variables**
+
+Add these in your Vercel dashboard (Project Settings → Environment Variables):
+
+```bash
+# Database (Neon PostgreSQL - free tier)
+DATABASE_URL=postgresql://...
+
+# Clerk Auth (free tier)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxx
+CLERK_SECRET_KEY=sk_test_xxx
+CLERK_WEBHOOK_SECRET=whsec_xxx
+
+# Admin Access (your Clerk user ID)
+ADMIN_USER_IDS=user_xxx
+```
+
+### **3. Get Your API Keys**
+
+**Neon Database (Free):**
+1. Go to https://console.neon.tech
+2. Create new project → Copy connection string
+3. Paste as `DATABASE_URL`
+
+**Clerk Auth (Free):**
+1. Go to https://dashboard.clerk.com
+2. New application → Copy keys
+3. Paste as `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`
+4. In Webhooks tab: Add URL `https://your-app.vercel.app/api/webhooks/clerk`
+5. Copy webhook secret → `CLERK_WEBHOOK_SECRET`
+6. In Users tab: Copy your User ID → add to `ADMIN_USER_IDS`
+
+### **4. Run Database Migration**
+
+Vercel automatically runs `prisma migrate deploy` on build.
+
+Or manually via your deployed API:
+```bash
+# Connect to your Vercel app's Postgres database
+npx prisma migrate deploy
+```
+
+### **5. Done!**
+
+Your app is live at: `https://your-app.vercel.app`
+
+---
+
+## 🖥️ Local Development
+
+### **Prerequisites**
+- Node.js 18+
+- pnpm (or npm)
+- Neon account (free)
+- Clerk account (free)
+
+### **Setup Steps**
+
+**1. Clone & Install**
+```bash
+git clone <your-repo>
+cd lumyn-delivery
 pnpm install
 ```
 
-### 2. Set Up Database
-
-First, create a new Neon PostgreSQL database:
-1. Go to https://console.neon.tech
-2. Create a new project
-3. Copy your connection string
-4. Add it as `DATABASE_URL` in `.env.local`
-
-Then run the Prisma setup:
+**2. Environment Variables**
 ```bash
-npx prisma migrate deploy
+cp .env.example .env.local
+# Edit .env.local with your keys
+```
+
+**3. Database**
+```bash
+# Create Neon database → get DATABASE_URL
+# Then:
+npx prisma migrate dev --name init
 npx prisma generate
 ```
 
-### 3. Configure Clerk
+**4. Clerk Setup**
+- Create app at clerk.com
+- Add webhook: `http://localhost:3000/api/webhooks/clerk`
+- Get keys → `.env.local`
 
-1. Go to https://dashboard.clerk.com
-2. Create a new application or select existing
-3. Copy your publishable and secret keys
-4. Add them to `.env.local`:
-   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-   - `CLERK_SECRET_KEY`
-   - `CLERK_WEBHOOK_SECRET` (from Webhooks section)
-
-### 4. Set Admin User IDs
-
-After creating your first user in Clerk:
-1. Go to Users in your Clerk dashboard
-2. Copy the User ID
-3. Add it to `ADMIN_USER_IDS` in `.env.local`
-
-### 5. Configure Webhook (Important!)
-
-1. In your Clerk dashboard, go to Webhooks
-2. Create a new webhook endpoint:
-   - URL: `https://yourdomain.com/api/webhooks/clerk`
-   - Events to listen to: `user.created`, `user.updated`, `user.deleted`
-   - Message signing secret will be provided - save as `CLERK_WEBHOOK_SECRET`
-
-For local development with webhooks, use ngrok:
-```bash
-ngrok http 3000
-```
-Then use the ngrok URL for your webhook endpoint.
-
-## Running the Application
-
-### Development
+**5. Run**
 ```bash
 pnpm dev
+# Open http://localhost:3000
 ```
 
-The app will be available at http://localhost:3000
+---
 
-### Production Build
-```bash
-pnpm build
-pnpm start
-```
+## 📱 PWA Installation
 
-## Database Schema
+Your users get a native app experience:
 
-The application includes the following Prisma models:
+**iOS Safari:**
+1. Open app URL in Safari
+2. Tap Share (⬆️)
+3. "Add to Home Screen"
+4. Launches fullscreen
 
-- **User** - Customer and driver accounts with Clerk integration
-- **Driver** - Extended driver profile with license and vehicle info
-- **Address** - Delivery addresses with geocoding support
-- **Delivery** - Main delivery orders with status tracking
-- **Order** - Associated orders with delivery status
-- **Review** - Customer reviews and ratings for drivers
+**Android Chrome:**
+1. Open URL in Chrome
+2. Menu (⋮) → "Add to Home screen"
+3. Tap "Add"
+4. Icon appears on home screen
 
-## PWA Features
+**No app store needed!**
 
-The application includes Progressive Web App (PWA) capabilities:
-- Installable on mobile and desktop
-- Offline support with service worker
-- Push notification ready
-- Background sync ready
+---
 
-To install locally:
-1. Open the app in a compatible browser (Chrome, Edge, Safari 16.4+)
-2. Look for "Install app" prompt or use the browser menu
+## 🔑 Getting Admin Access
 
-## API Endpoints
+1. Sign up through the app (choose "Customer" or "Driver")
+2. Copy your Clerk User ID from Clerk dashboard (Users → your user → User ID)
+3. Add it to `ADMIN_USER_IDS` in environment variables
+4. Deploy or restart app
+5. Visit `/admin` - you now have admin access!
 
-### Public Routes
-- `GET /` - Landing page
-- `POST /api/webhooks/clerk` - Clerk webhook handler
+---
 
-### Authenticated Routes
-- `GET /api/deliveries` - List deliveries
-- `POST /api/deliveries` - Create delivery
-- `GET /api/user/profile` - Get user profile
-- `PUT /api/user/profile` - Update user profile
+## 📋 Default Workflow
 
-### Admin Routes
-- `GET /admin` - Admin dashboard
-- `GET /admin/users` - Manage users
-- `GET /admin/drivers` - Manage drivers
-- `GET /admin/deliveries` - Manage deliveries
+### **Customer Flow**
+1. Sign up as Customer
+2. Add delivery addresses
+3. Create new delivery (pickup + dropoff)
+4. Pay via Pesapal
+5. Track delivery on live map
+6. Rate driver after completion
 
-## Deployment
+### **Driver Flow**
+1. Sign up as Driver
+2. Complete 6-step onboarding (license, vehicle, documents)
+3. Wait for admin approval (1-2 days)
+4. Go online in dashboard
+5. Accept incoming deliveries
+6. Update status: PICKED_UP → IN_TRANSIT → DELIVERED
+7. Earn money!
 
-### Deploy to Vercel (Recommended)
+### **Admin Flow**
+1. Login as admin user
+2. Go to `/admin/drivers`
+3. Review pending driver applications
+4. View uploaded documents
+5. Approve or reject with reason
+6. Driver receives email notification
 
-1. Push your code to GitHub
-2. Go to https://vercel.com
-3. Import your repository
-4. Add environment variables in project settings
-5. Deploy!
+---
 
-Vercel automatically handles PWA deployment and service worker caching.
+## 🐛 Common Issues
 
-## Features Implemented
+### **"PWA not installing"**
+- Ensure HTTPS (required on production)
+- Check manifest loads at `your-domain.com/manifest.json`
+- Clear browser cache & cookies
+- Try incognito mode
 
-✅ Clerk authentication with automatic user provisioning
-✅ Role-based access control (Customer, Driver, Admin)
-✅ Prisma ORM with Neon PostgreSQL
-✅ Responsive design with Midnight Black/Slate Gray/Gold theme
-✅ PWA with offline support
-✅ Admin dashboard skeleton
-✅ User profile management
-✅ Delivery listing and filtering
-
-## Features To Build
-
-- New delivery creation with map selection
-- Real-time delivery tracking with WebSocket
-- Driver acceptance and pickup/delivery workflow
-- Driver profile and verification system
-- Delivery reviews and ratings
-- Admin management dashboards
-- Analytics and reporting
-- Payment integration
-- Notification system
-
-## Troubleshooting
-
-### Database Connection Error
-- Check that `DATABASE_URL` is correct
+### **"Database connection error"**
+- Verify `DATABASE_URL` is correct
 - Ensure Neon database is running
-- Run `npx prisma db push` to sync schema
+- Run: `npx prisma migrate deploy`
 
-### Clerk Authentication Issues
-- Verify `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` is correct
-- Check that the app is added to Clerk dashboard
-- Clear browser cache and try again
+### **"Clerk authentication not working"**
+- Double-check API keys in `.env.local`
+- Clear browser storage (Clerk caches tokens)
+- Verify webhook endpoint is configured
 
-### Webhook Not Working
-- Ensure `CLERK_WEBHOOK_SECRET` matches Clerk dashboard
-- For local development, use ngrok URL
-- Check Clerk dashboard logs for webhook errors
+### **"Maps not loading"**
+- OpenStreetMap tiles are free - no API key needed
+- Ensure your IP isn't rate-limited
+- Check browser console for errors
 
-## Support
+### **"Service worker not activating"**
+- PWA requires HTTPS on production
+- Clear service worker storage in DevTools → Application
+- Rebuild: `pnpm build`
 
-For more information:
-- Clerk Docs: https://clerk.com/docs
-- Neon Docs: https://neon.tech/docs
-- Prisma Docs: https://www.prisma.io/docs
-- Next.js Docs: https://nextjs.org/docs
+---
 
-## License
+## 📞 Support
 
-This project is created with v0. All rights reserved.
+- **Docs**: See full `README.md` for comprehensive documentation
+- **Clerk Help**: https://clerk.com/docs
+- **Neon Help**: https://neon.tech/docs
+- **Prisma Docs**: https://www.prisma.io/docs
+- **Next.js Docs**: https://nextjs.org/docs
+
+---
+
+## 🎯 Quick Deploy Checklist
+
+- [ ] Create Neon PostgreSQL database
+- [ ] Create Clerk application
+- [ ] Copy keys to environment variables
+- [ ] Set `ADMIN_USER_IDS` (your Clerk user ID)
+- [ ] Deploy to Vercel
+- [ ] Create admin webhook in Clerk dashboard
+- [ ] Test sign up flow
+- [ ] Install PWA on phone (test on iOS & Android)
+- [ ] Create test driver account & submit application
+- [ ] Approve driver via `/admin/drivers`
+- [ ] Test driver dashboard & delivery acceptance
+
+**Total time: ~15 minutes** 🚀
+
+---
+
+**Need help?** Check the full [README.md](README.md) for comprehensive documentation.

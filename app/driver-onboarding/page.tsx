@@ -122,7 +122,7 @@ export default function DriverOnboardingPage() {
     formDataObj.append('type', type)
 
     try {
-      const res = await fetch('/api/upload', {
+      const res = await fetch('/api/cloudinary-upload', {
         method: 'POST',
         body: formDataObj,
       })
@@ -134,12 +134,12 @@ export default function DriverOnboardingPage() {
       }
     } catch (error) {
       setErrors(prev => ({ ...prev, [type]: 'Upload failed' }))
-    } finally {
-      setUploading(null)
-    }
-  }
+     } finally {
+       setUploading(null)
+     }
+   }
 
-  const validateStep = (): boolean => {
+   const validateStep = (): boolean => {
     const newErrors: Record<string, string> = {}
 
     switch (currentStep) {

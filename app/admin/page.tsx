@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
-import { BarChart, Users, Package, TrendingUp } from 'lucide-react'
+import { Package, Users, BarChart, DollarSign, TrendingUp, Wallet } from 'lucide-react'
 import Link from 'next/link'
 
 interface DashboardStats {
@@ -218,8 +218,32 @@ export default function AdminDashboard() {
               </div>
             </div>
           </Link>
-        </div>
-      </div>
-    </div>
-  )
-}
+
+          <Link href="/admin/pricing" className="card hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-primary mb-1">Pricing Settings</h3>
+                <p className="text-sm text-secondary">Configure delivery rates & multipliers</p>
+              </div>
+              <div className="h-10 w-10 rounded-2xl bg-accent-gold/20 flex items-center justify-center">
+                <DollarSign className="h-5 w-5 text-accent-gold" />
+              </div>
+            </div>
+          </Link>
+
+          <Link href="/admin/payouts" className="card hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-primary mb-1">Payout Management</h3>
+                <p className="text-sm text-secondary">Process driver payouts</p>
+              </div>
+              <div className="h-10 w-10 rounded-2xl bg-success/20 flex items-center justify-center">
+                <Wallet className="h-5 w-5 text-success" />
+              </div>
+            </div>
+           </Link>
+         </div>
+       </div>
+     </div>
+   )
+ }

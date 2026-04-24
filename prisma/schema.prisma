@@ -320,22 +320,36 @@ model DriverPayout {
   id                String      @id @default(cuid())
   driverId          String
   driver            User        @relation(fields: [driverId], references: [id])
-  
+
   deliveryId        String      @unique
   delivery          Delivery    @relation(fields: [deliveryId], references: [id])
-  
+
   amount            Float
   currency          String      @default("KES")
   status            PayoutStatus @default(PENDING)
-  
+
   provider          String?     // "pesapal", "paypal", etc.
   providerPayoutId  String?     @unique
-  
+
   paidAt            DateTime?
-  
+
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
-  
+
   @@index([driverId])
   @@index([status])
+}
+
+model PricingRule {
+  id                String      @id @default(cuid())
+  name              String
+  description       String?
+  baseFare          Float
+  costPerKm         Float
+  minimumFare       Float
+  priorityMultiplier Json      // { NORMAL: 1, URGENT: 1.5, HIGH: 1.3, LOW: 0.9 }
+  vehicleType       String?     // null = all types, or specific vehicle type
+  active            Boolean     @default(true)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 }

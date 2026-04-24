@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { notifyDeliveryStatusChange } from '@/lib/notifications/notifier'
+import { broadcastStatusChange } from '@/lib/sse'
 import { successResponse, errorResponse, unauthorizedResponse, serverErrorResponse, notFoundResponse } from '@/lib/api-response'
 
 // POST /api/driver/status/:deliveryId — Driver updates delivery status
@@ -67,8 +68,24 @@ export async function POST(
     const updateData: any = { status }
     if (status === 'IN_TRANSIT') {
       updateData.estimatedTime = calculateEstimatedTime(delivery.distance || 0)
-    } else if (status === 'DELIVERED') {
+    } else     if (status === 'DELIVERED') {
       updateData.deliveryTime = new Date()
+      
+      // Calculate driver earnings (e.g., 80% of delivery cost)
+      const platformCommission = 0.2 // 20%
+      const driverEarnings = delivery.cost * (1 - platformCommission)
+      
+      // Create payout record
+      await prisma.driverPayout.create({
+        data: {
+          driverId: driver.id,
+          deliveryId: deliveryId,
+          amount: driverEarnings,
+          currency: 'KES',
+          status: 'PENDING',
+        },
+      })
+      
       // Increment driver's total deliveries
       await prisma.user.update({
         where: { id: driver.id },
@@ -102,8 +119,11 @@ export async function POST(
       },
     })
 
-     // Send notifications (push, email, SMS based on prefs)
-     await notifyDeliveryStatusChange(deliveryId, status)
+    // Broadcast real-time update via SSE
+    broadcastStatusChange(deliveryId, status, driver.id)
+
+    // Send notifications (push, email, SMS based on prefs)
+    await notifyDeliveryStatusChange(deliveryId, status)
 
     const message = status === 'IN_TRANSIT' ? 'Delivery in transit' : 'Delivery completed'
     return NextResponse.json(
