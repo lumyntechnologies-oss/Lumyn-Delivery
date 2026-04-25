@@ -10,17 +10,11 @@ export const metadata: Metadata = {
   title: 'Lumyn Delivery - Fast, Reliable Deliveries',
   description: 'Lumyn Delivery provides fast and reliable delivery services for businesses and individuals.',
   generator: 'v0.app',
-  manifest: '/manifest.json',
   keywords: ['delivery', 'logistics', 'shipping', 'lumyn'],
   authors: [{ name: 'Lumyn Delivery' }],
   icons: {
     icon: '/favicon.jpg',
     apple: '/icon-192x192.png',
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'Lumyn Delivery',
   },
 }
 
@@ -42,11 +36,7 @@ export default function RootLayout({
       <html lang="en" className="bg-background" suppressHydrationWarning>
         <head>
           <link rel="icon" href="/favicon.jpg" />
-          <link rel="manifest" href="/manifest.json" />
           <link rel="apple-touch-icon" href="/icon-192x192.png" />
-          <meta name="apple-mobile-web-app-capable" content="yes" />
-          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-          <meta name="apple-mobile-web-app-title" content="Lumyn Delivery" />
         </head>
         <body className={`${inter.variable} font-sans antialiased`}>
           {children}

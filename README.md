@@ -10,23 +10,31 @@
 
 ---
 
-## 📱 Mobile App (PWA)
+## 📱 Mobile App (Native Android)
 
-Lumyn Delivery is a **Progressive Web App** - install it on your phone like a native app:
+Lumyn Delivery is available as a **native Android app** built with Capacitor:
 
 ### **Installation**
-1. Open the app on your phone: `https://your-domain.vercel.app`
-2. Look for **"Add to Home Screen"** or **"Install App"** in browser menu
-3. Tap to install - app icon appears on home screen
-4. Launch fullscreen, works offline!
+1. Visit the web app: `https://lumyn-delivery.vercel.app`
+2. Click **"Download App"** in the navigation bar
+3. Download the APK file (`LumynDelivery-debug.apk`)
+4. Enable "Install from unknown sources" in Android Settings
+5. Install and launch the app
 
-### **PWA Features**
+### **Features**
 - ✅ Works offline (caches pages & data)
-- ✅ Push notifications for delivery updates
+- ✅ Push notifications via native plugin
 - ✅ Camera access for document upload
 - ✅ GPS location for driver tracking
-- ✅ Home screen icon with splash screen
-- ✅ Automatic updates (no app store review needed)
+- ✅ Same UI as web app (loads from production URL)
+- ✅ Automatic updates when you restart the app (web content loads fresh)
+
+### **Native vs PWA**
+We've removed the PWA (Progressive Web App) implementation in favor of a native Android APK. The native app provides:
+- Better hardware integration (camera, GPS, notifications)
+- Smoother performance
+- No browser UI chrome
+- Direct install without "Add to Home Screen" prompts
 
 ---
 
@@ -68,7 +76,7 @@ Lumyn Delivery is a **Progressive Web App** - install it on your phone like a na
 ├─────────────────┤
 │    Prisma ORM   │ (PostgreSQL via Neon)
 ├─────────────────┤
-│   PWA / SW      │ (Offline support, caching)
+│ Native Android  │ (Capacitor - camera, GPS, notifications)
 └─────────────────┘
 ```
 
@@ -77,11 +85,10 @@ Lumyn Delivery is a **Progressive Web App** - install it on your phone like a na
 - **Auth**: Clerk (OAuth, SSO, webhooks)
 - **Database**: PostgreSQL (Neon - serverless)
 - **ORM**: Prisma (type-safe DB access)
-- **PWA**: @ducanh2912/next-pwa (service worker, install prompts)
+- **Mobile**: Capacitor 8 (native Android APK)
 - **Maps**: Leaflet + OpenStreetMap (address picking, live tracking)
 - **Payments**: Pesapal (M-Pesa, cards, bank transfers)
 - **Email**: Resend (transactional emails)
-- **Push**: Web Push API (browser notifications)
 - **Hosting**: Vercel (recommended)
 
 ---
@@ -226,7 +233,7 @@ pnpm dev
 1. Push to GitHub
 2. Click "Deploy with Vercel" button above
 3. Add environment variables in Vercel dashboard
-4. Deploy! (PWA automatically built)
+4. Deploy!
 
 ### **Deploy to Railway**
 ```bash
@@ -257,40 +264,27 @@ pm2 start "pnpm start" --name lumyn-delivery
 ## 📱 Mobile App Installation Guide
 
 ### **For End Users**
-Your customers and drivers install the app as a PWA:
+Your customers and drivers install the app as a native Android APK:
 
-**iOS (Safari):**
-1. Open `https://your-app.vercel.app` in Safari
-2. Tap Share button (⬆️)
-3. Scroll down → "Add to Home Screen"
-4. App icon appears on home screen
+**Android:**
+1. Open `https://lumyn-delivery.vercel.app` in Chrome on your Android phone
+2. Tap the **"Download App"** button in the navigation
+3. Download the APK file
+4. Go to Settings → Security → Enable "Install from unknown sources" for your browser
+5. Open the downloaded APK and tap Install
+6. Launch Lumyn Delivery from your app drawer
 
-**Android (Chrome):**
-1. Open URL in Chrome
-2. Tap 3-dots menu (⋮)
-3. Tap "Add to Home screen"
-4. Confirm "Add" → icon on home screen
+**Note**: iOS is not currently supported (native Android only). Users on iOS can still use the web app via Safari.
 
-**Desktop (Chrome/Edge):**
-1. Visit site → install icon appears in address bar (right side)
-2. Click icon → "Install" → desktop shortcut created
-
-### **For Developers (Testing PWA Locally)**
+### **For Developers (Building from Source)**
 ```bash
-# Build and start production server
-pnpm build
-pnpm start
+# Build the APK locally
+cd lumyn-delivery
+npm install
+npx cap sync android
+cd android && ./gradlew assembleDebug
 
-# On mobile (same WiFi), visit:
-http://192.168.1.X:3000  # Your computer's IP
-
-# Chrome will show install prompt after a few seconds
-```
-
-**Note:** PWA install prompt requires HTTPS on production. Use `ngrok` for local HTTPS testing:
-```bash
-ngrok http 3000
-# Use the https://xxx.ngrok.io URL on your phone
+# The APK will be at: android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
 ---
@@ -455,12 +449,9 @@ npx prisma migrate reset
 
 ## 🐛 Troubleshooting
 
-### **PWA Not Installing**
-- ❌ Ensure HTTPS (required for service workers on production)
-- ❌ Check manifest loads: `https://your-domain.com/manifest.json`
-- ❌ Check service worker: `https://your-domain.com/sw.js`
-- ✅ Clear browser cache
-- ✅ Use Chrome/Edge/Safari 16.4+
+### **PWA/Offline Not Working**
+- ❌ PWA has been removed; use the native Android app instead
+- ✅ Web app requires internet connection (real-time data)
 
 ### **Webhook Not Firing**
 - Verify webhook URL in Clerk dashboard

@@ -56,11 +56,21 @@ export function Navbar() {
                 </Link>
               </>
             )}
+            {/* Mobile App Download Button */}
+            <Link 
+              href="/mobile-app" 
+              className="text-sm font-medium text-secondary hover:text-primary transition flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 2a2 2 0 012-2h5.5a.5.5 0 01.4.8l-1.5 2.5a.5.5 0 01-.8.4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-1.383a1 1 0 00.579-.293l1.5-2.5a1 1 0 00-.371-1.243V2z" />
+              </svg>
+              Download App
+            </Link>
           </div>
 
           {/* Auth Actions */}
           <div className="flex items-center gap-4">
-            {isSignedIn && <UserButton afterSignOutUrl="/" />}
+            {isSignedIn && <UserButton />}
             
             {/* Mobile menu button */}
             <button
@@ -73,50 +83,59 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-border py-4 space-y-3">
-            {isSignedIn ? (
-              <>
-                <Link
-                  href="/deliveries"
-                  className="block px-4 py-2 text-sm font-medium text-secondary hover:text-primary rounded-2xl hover:bg-secondary/5"
-                >
-                  Deliveries
-                </Link>
-                {isAdmin && (
-                  <Link
-                    href="/admin"
-                    className="block px-4 py-2 text-sm font-medium text-secondary hover:text-primary rounded-2xl hover:bg-secondary/5"
-                  >
-                    Admin Dashboard
-                  </Link>
-                )}
-                <Link
-                  href="/profile"
-                  className="block px-4 py-2 text-sm font-medium text-secondary hover:text-primary rounded-2xl hover:bg-secondary/5"
-                >
-                  Profile
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/sign-in"
-                  className="block px-4 py-2 text-sm font-medium text-secondary hover:text-primary rounded-2xl hover:bg-secondary/5"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/sign-up"
-                  className="block w-full text-center btn-primary text-sm"
-                >
-                  Get Started
-                </Link>
-              </>
-            )}
-          </div>
-        )}
+         {/* Mobile Navigation */}
+         {isMobileMenuOpen && (
+           <div className="md:hidden border-t border-border py-4 space-y-3">
+             {isSignedIn ? (
+               <>
+                 <Link
+                   href="/deliveries"
+                   className="block px-4 py-2 text-sm font-medium text-secondary hover:text-primary rounded-2xl hover:bg-secondary/5"
+                 >
+                   Deliveries
+                 </Link>
+                 {isAdmin && (
+                   <Link
+                     href="/admin"
+                     className="block px-4 py-2 text-sm font-medium text-secondary hover:text-primary rounded-2xl hover:bg-secondary/5"
+                   >
+                     Admin Dashboard
+                   </Link>
+                 )}
+                 <Link
+                   href="/profile"
+                   className="block px-4 py-2 text-sm font-medium text-secondary hover:text-primary rounded-2xl hover:bg-secondary/5"
+                 >
+                   Profile
+                 </Link>
+               </>
+             ) : (
+               <>
+                 <Link
+                   href="/sign-in"
+                   className="block px-4 py-2 text-sm font-medium text-secondary hover:text-primary rounded-2xl hover:bg-secondary/5"
+                 >
+                   Sign In
+                 </Link>
+                 <Link
+                   href="/sign-up"
+                   className="block w-full text-center btn-primary text-sm"
+                 >
+                   Get Started
+                 </Link>
+               </>
+             )}
+             <Link
+               href="/mobile-app"
+               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-secondary hover:text-primary rounded-2xl hover:bg-secondary/5"
+             >
+               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                 <path d="M2 2a2 2 0 012-2h5.5a.5.5 0 01.4.8l-1.5 2.5a.5.5 0 01-.8.4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-1.383a1 1 0 00.579-.293l1.5-2.5a1 1 0 00-.371-1.243V2z" />
+               </svg>
+               Download Mobile App
+             </Link>
+           </div>
+         )}
       </div>
     </nav>
   )
