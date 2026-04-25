@@ -33,18 +33,17 @@ export default function NewDeliveryPage() {
   const [showAddressForm, setShowAddressForm] = useState(false)
   const [loadingAddresses, setLoadingAddresses] = useState(true)
 
-  // Form state
-  const [formData, setFormData] = useState({
-    description: '',
-    pickupAddressId: '',
-    dropoffAddressId: '',
-    cost: '',
-    tip: '',
-    priority: 'NORMAL',
-    notes: '',
-    weight: '',
-    dimensions: '',
-  })
+   // Form state
+   const [formData, setFormData] = useState({
+     description: '',
+     pickupAddressId: '',
+     dropoffAddressId: '',
+     tip: '',
+     priority: 'NORMAL',
+     notes: '',
+     weight: '',
+     dimensions: '',
+   })
 
   // Distance calculation state
   const [calculatedDistance, setCalculatedDistance] = useState<number | null>(null)
@@ -243,8 +242,8 @@ export default function NewDeliveryPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.description || !formData.pickupAddressId || !formData.dropoffAddressId || !formData.cost) {
-      alert('Please fill in all required fields')
+    if (!formData.description || !formData.pickupAddressId || !formData.dropoffAddressId || !autoCost) {
+      alert('Please fill in all required fields and select both addresses to calculate cost')
       return
     }
 
@@ -262,7 +261,7 @@ export default function NewDeliveryPage() {
           description: formData.description,
           pickupAddressId: formData.pickupAddressId,
           dropoffAddressId: formData.dropoffAddressId,
-          cost: parseFloat(formData.cost),
+          cost: autoCost, // Use auto-calculated cost
           priority: formData.priority,
           notes: formData.notes || null,
           weight: formData.weight ? parseFloat(formData.weight) : null,
@@ -408,26 +407,28 @@ export default function NewDeliveryPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="cost" className="text-sm font-medium text-secondary block mb-2">
-                    Cost (KSh) *
-                  </label>
-                  <input
-                    id="cost"
-                    name="cost"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.cost}
-                    onChange={handleFormChange}
-                    required
-                    className="input-base w-full bg-secondary/5"
-                  />
-                  <p className="text-xs text-secondary mt-1">
-                    {calculatedDistance ? 'Auto-calculated based on distance' : 'Select addresses to auto-calculate'}
-                  </p>
-                </div>
+               <div className="grid grid-cols-2 gap-4">
+                 <div>
+                   <label className="text-sm font-medium text-secondary block mb-2">
+                     Delivery Cost (Auto-calculated)
+                   </label>
+                   <div className="input-base w-full bg-secondary/5 flex items-center justify-between">
+                     <span className="text-sm text-secondary">
+                       {autoCost !== null ? formatCost(autoCost) : 'Select addresses to calculate'}
+                     </span>
+                     {autoCost !== null && (
+                       <span className="text-xs text-success flex items-center gap-1">
+                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                         </svg>
+                         Calculated
+                       </span>
+                     )}
+                   </div>
+                   <p className="text-xs text-secondary mt-1">
+                     Cost is automatically calculated based on distance and priority
+                   </p>
+                 </div>
 
                 <div>
                   <label htmlFor="tip" className="text-sm font-medium text-secondary block mb-2">
@@ -812,7 +813,7 @@ export default function NewDeliveryPage() {
           <div className="flex gap-4">
             <button
               type="submit"
-              disabled={loading || !calculatedDistance}
+              disabled={loading || !autoCost}
               className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
