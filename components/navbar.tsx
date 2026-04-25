@@ -24,8 +24,8 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-2xl bg-accent-gold flex items-center justify-center">
-              <span className="font-bold text-primary">L</span>
+            <div className="h-8 w-8 rounded-2xl flex items-center justify-center overflow-hidden">
+              <img src="/image.png" alt="Lumyn" className="h-full w-full object-cover" />
             </div>
             <span className="text-xl font-bold text-primary hidden sm:inline">Lumyn</span>
           </Link>

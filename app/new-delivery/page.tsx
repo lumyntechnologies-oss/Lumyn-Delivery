@@ -140,6 +140,87 @@ export default function NewDeliveryPage() {
     }
   }
 
+  const handleUseCurrentLocation = async (type: 'pickup' | 'dropoff') => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser')
+      return
+    }
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        })
+      })
+
+      const { latitude, longitude } = position.coords
+      
+      // Reverse geocode to get address components
+      let addressData: any = null
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+        addressData = await response.json()
+      } catch (error) {
+        console.error('Reverse geocoding failed:', error)
+      }
+
+      const addressComponents = addressData?.address || {}
+      const street = addressComponents.road || addressComponents.house_number ? `${addressComponents.house_number || ''} ${addressComponents.road || ''}`.trim() : 'TBD'
+      const city = addressComponents.city || addressComponents.town || addressComponents.village || addressComponents.county || 'TBD'
+      const state = addressComponents.state || 'TBD'
+      const zipCode = addressComponents.postcode || ''
+      const country = addressComponents.country || 'United States'
+      const displayName = addressData?.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+
+      // Create a new address via API (saves to database)
+      const newAddress = {
+        street,
+        city,
+        state,
+        zipCode,
+        country,
+        label: type === 'pickup' ? 'My Location (Pickup)' : 'Recipient Location',
+        isDefault: false,
+        latitude,
+        longitude,
+      }
+
+      const res = await fetch('/api/addresses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newAddress),
+      })
+      const data = await res.json()
+
+      if (data.success) {
+        // Add to addresses list
+        setAddresses(prev => [...prev, data.data])
+        // Auto-select this address
+        if (type === 'pickup') {
+          setFormData(prev => ({ ...prev, pickupAddressId: data.data.id }))
+        } else {
+          setFormData(prev => ({ ...prev, dropoffAddressId: data.data.id }))
+        }
+      } else {
+        alert('Failed to save location: ' + (data.error || 'Unknown error'))
+      }
+
+    } catch (error: any) {
+      console.error('Geolocation error:', error)
+      let message = 'Unable to get your location'
+      if (error.code === 1) {
+        message = 'Location access denied. Please enable location permissions and try again.'
+      } else if (error.code === 2) {
+        message = 'Location unavailable. Please check your GPS and try again.'
+      } else if (error.code === 3) {
+        message = 'Location request timed out. Please try again.'
+      }
+      alert(message)
+    }
+   }
+
   // Auto-calculate distance & cost when addresses change
   useEffect(() => {
     if (formData.pickupAddressId && formData.dropoffAddressId) {
@@ -690,15 +771,28 @@ export default function NewDeliveryPage() {
                </div>
              )}
 
-             {/* Saved Addresses Selection */}
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               {/* Pickup Address */}
-               <div>
-                 <label className="text-sm font-medium text-secondary block mb-2">
-                   Pickup Address *
-                 </label>
-                 <div className="space-y-2">
-                   {addresses.map((address) => (
+              {/* Saved Addresses Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Pickup Address */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-secondary">
+                      Pickup Address *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handleUseCurrentLocation('pickup')}
+                      className="text-xs text-accent-gold hover:text-accent-gold-light flex items-center gap-1"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Use My Location
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {addresses.map((address) => (
                      <label
                        key={address.id}
                        className={`flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-all ${
@@ -743,13 +837,26 @@ export default function NewDeliveryPage() {
                  </div>
                </div>
 
-               {/* Dropoff Address */}
-               <div>
-                 <label className="text-sm font-medium text-secondary block mb-2">
-                   Dropoff Address *
-                 </label>
-                 <div className="space-y-2">
-                   {addresses.map((address) => (
+                {/* Dropoff Address */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-secondary">
+                      Dropoff Address *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handleUseCurrentLocation('dropoff')}
+                      className="text-xs text-accent-gold hover:text-accent-gold-light flex items-center gap-1"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Use My Location
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {addresses.map((address) => (
                      <label
                        key={address.id}
                        className={`flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-all ${

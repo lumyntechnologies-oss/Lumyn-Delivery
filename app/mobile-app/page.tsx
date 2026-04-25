@@ -14,12 +14,12 @@ export default function MobileAppPage() {
       <nav className="sticky top-0 z-50 border-b border-border bg-white dark:bg-primary-light">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-2xl bg-accent-gold flex items-center justify-center">
-                <span className="font-bold text-primary">L</span>
-              </div>
-              <span className="text-xl font-bold text-primary hidden sm:inline">Lumyn</span>
-            </Link>
+             <Link href="/" className="flex items-center gap-2">
+               <div className="h-8 w-8 rounded-2xl flex items-center justify-center overflow-hidden">
+                 <img src="/image.png" alt="Lumyn" className="h-full w-full object-cover" />
+               </div>
+               <span className="text-xl font-bold text-primary hidden sm:inline">Lumyn</span>
+             </Link>
             <Link 
               href="/mobile-app" 
               className="text-sm font-medium text-primary"

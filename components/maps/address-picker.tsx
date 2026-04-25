@@ -62,11 +62,12 @@ export default function AddressPicker({ onLocationSelect, initialLat, initialLng
       const data = await response.json()
       const displayName = data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`
       setAddress(displayName)
-      onLocationSelect(lat, lng, displayName)
+      // Pass components for auto-filling address form
+      onLocationSelect(lat, lng, displayName, data.address || null)
     } catch (error) {
       console.error('Reverse geocoding failed:', error)
       setAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`)
-      onLocationSelect(lat, lng, `${lat.toFixed(6)}, ${lng.toFixed(6)}`)
+      onLocationSelect(lat, lng, `${lat.toFixed(6)}, ${lng.toFixed(6)}`, null)
     } finally {
       setLoading(false)
     }
@@ -99,11 +100,12 @@ export default function AddressPicker({ onLocationSelect, initialLat, initialLng
         const data = await response.json()
         const displayName = data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
         setAddress(displayName)
-        onLocationSelect(latitude, longitude, displayName)
+        // Pass components for auto-filling address form
+        onLocationSelect(latitude, longitude, displayName, data.address || null)
       } catch (error) {
         console.error('Reverse geocoding failed:', error)
         setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`)
-        onLocationSelect(latitude, longitude, `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`)
+        onLocationSelect(latitude, longitude, `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`, null)
       }
     } catch (error: any) {
       console.error('Geolocation error:', error)

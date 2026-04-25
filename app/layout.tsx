@@ -13,8 +13,8 @@ export const metadata: Metadata = {
   keywords: ['delivery', 'logistics', 'shipping', 'lumyn'],
   authors: [{ name: 'Lumyn Delivery' }],
   icons: {
-    icon: '/favicon.jpg',
-    apple: '/icon-192x192.png',
+    icon: '/image1.png',
+    apple: '/image2.png',
   },
 }
 
