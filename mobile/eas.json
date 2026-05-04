@@ -1,0 +1,53 @@
+{
+  "build": {
+    "development": {
+      "distribution": "internal",
+      "android": {
+        "gradleCommand": ":app:assembleDebug",
+        "env": {
+          "NODE_ENV": "development"
+        }
+      },
+      "ios": {
+        "simulator": true,
+        "env": {
+          "NODE_ENV": "development"
+        }
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "gradleCommand": ":app:assembleDebug",
+        "env": {
+          "NODE_ENV": "production"
+        }
+      },
+      "ios": {
+        "simulator": true,
+        "env": {
+          "NODE_ENV": "production"
+        }
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle",
+        "env": {
+          "NODE_ENV": "production"
+        }
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./play-store-service-account.json",
+        "track": "production"
+      }
+    }
+  },
+  "cli": {
+    "version": ">= 0.45.0"
+  }
+}
